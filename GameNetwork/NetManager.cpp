@@ -4,7 +4,7 @@ NetManagerPtr NetManager::s_Instance = nullptr;
 
 bool NetManager::Init()
 {
-	m_UDPSockPtr = SockUtil::CreateUDPSocket(m_Family);
+	m_UDPSockPtr = Utility::CreateUDPSocket(m_Family);
 	if (m_UDPSockPtr == nullptr)
 	{
 		return false;
@@ -63,7 +63,31 @@ void NetManager::ReadIncomingPackets()
 		}
 
 		is.ResetCapacity(readBytes);
-		m_ReceivedPackets.emplace(is, sockAddr, TimeUtil::Instance().GetTimef());
+
+		// simulate packet loss
+		float randf = Utility::GetRandomFloat();
+
+		if (randf >= m_DropPacketChance)
+		{
+			// simulate latency
+			float simulatedReceivedTime = TimeUtil::Instance().GetTimef() + m_SimulatedLatency * Utility::GetRandomFloat();
+			m_ReceivedPackets.emplace(is, sockAddr, simulatedReceivedTime);
+		}
+		else
+		{
+			ShowDroppedPacket(is, sockAddr);
+			++m_DroppedNum;
+		}
+
+		++m_ReceivedNum;
+
+		char info[256];
+		sprintf_s(info, "Whether to drop[%d], drop rate[%6.2f%s], drop chance[%6.2f], total[%d], dropped[%d]", 
+			(randf < m_DropPacketChance), static_cast<float>(m_DroppedNum) / m_ReceivedNum * 100.f, "%",
+			m_DropPacketChance, m_ReceivedNum, m_DroppedNum
+			);
+
+		Utility::LogMessage(LL_Debug, info);
 	}
 }
 

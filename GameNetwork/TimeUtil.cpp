@@ -12,6 +12,8 @@ TimeUtil::TimeUtil()
 
 	QueryPerformanceCounter(&s_StartTime);
 	m_LastFrameStartTime = GetTime();
+
+	srand(static_cast<int>(GetTime()));
 }
 
 void TimeUtil::Update()

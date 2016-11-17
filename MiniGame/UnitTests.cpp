@@ -31,9 +31,11 @@ void testMap()
 
 void testMessage()
 {
-	OutputBitStream os = HelloMsg::Write(string("Nancy"));
+	OutputBitStream os;
+	HelloMsg::Write(os, string("Nancy"));
 
-	OutputBitStream os2 = WelcomeMsg::Write(static_cast<uint8_t>(1));
+	OutputBitStream os2;
+	WelcomeMsg::Write(os2, static_cast<uint8_t>(1));
 
 	InputBitStream is(os.GetBuffer(), os.GetBitLength());
 	uint8_t type;

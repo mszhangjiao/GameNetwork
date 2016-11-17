@@ -44,7 +44,7 @@ private:
 		closesocket(sock);
 	}
 
-	friend class SockUtil;
+	friend class Utility;
 	SOCKET m_Socket;
 	int m_Family;
 };

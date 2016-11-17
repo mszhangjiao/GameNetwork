@@ -146,6 +146,10 @@ public:
 		Write(args...);
 	}
 
+	void Write()
+	{
+	}
+
 	void Append(const OutputBitStream& os)
 	{
 		uint32_t bitCapacity = m_BitHead + os.m_BitHead;
@@ -167,10 +171,6 @@ public:
 		: BitStream(buffer, bitCount, false)
 	{
 	}
-
-	//InputBitStream(const InputBitStream* is)
-	//	: BitSteam(dynamic_cast<BitStream*>(is))
-	//{}
 
 	void ReadBits(uint8_t& data, size_t bitCount);
 	void ReadBits(void* data, size_t bitCount);

@@ -1,8 +1,4 @@
 #include "stdafx.h"
-#include <string>
-#include <cassert>
-#include "UDPSocket.h"
-#include "SockUtil.h"
 
 using namespace std;
 
@@ -16,7 +12,7 @@ int UDPSocket::Bind(const char* host, const char* service)
 		string msg = "Failed in bind: not able to create SockAddrIn";
 		int error = GetLastError();
 
-		SockUtil::LogMessage(SockUtil::LL_Fatal, error, msg);
+		Utility::LogMessage(LL_Fatal, error, msg);
 		return error;
 	}
 
@@ -26,7 +22,7 @@ int UDPSocket::Bind(const char* host, const char* service)
 		string msg = "Failed to bind addr";
 		int error = GetLastError();
 
-		SockUtil::LogMessage(SockUtil::LL_Fatal, error, msg);
+		Utility::LogMessage(LL_Fatal, error, msg);
 		return error;
 	}
 	else
@@ -50,7 +46,7 @@ int UDPSocket::SetNonBlockingMode(bool bNonBlock)
 		string msg = "Failed to set non-block socket";
 		int error = GetLastError();
 
-		SockUtil::LogMessage(SockUtil::LL_Fatal, error, msg);
+		Utility::LogMessage(LL_Fatal, error, msg);
 		return error;
 	}
 	else

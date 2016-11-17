@@ -3,8 +3,9 @@
 NetServer::NetServer(const string& service, int family)
 	: NetManager(service, family)
 	, m_NewPlayerId(0)
-	, m_LastSentHeartbeatTime(0.f)
 {
+	SetDropPacketChance(0.10f);
+	SetSimulatedLatency(0.10f);
 }
 
 bool NetServer::StaticInit(const string& service, int family)
@@ -27,6 +28,17 @@ void NetServer::ProcessPacket(InputBitStream& is, const SockAddrIn& addr)
 	}
 }
 
+void NetServer::ShowDroppedPacket(InputBitStream& is, const SockAddrIn& addr)
+{
+	auto it = m_AddrToClientMap.find(addr);
+
+	if (it != m_AddrToClientMap.end())
+	{
+		it->second->GetConnection()->ShowDroppedPacket(is);
+	}
+}
+
+
 void NetServer::HandlePacketFromNewClient(InputBitStream& is, const SockAddrIn& addr)
 {
 	int8_t msgType;
@@ -38,13 +50,15 @@ void NetServer::HandlePacketFromNewClient(InputBitStream& is, const SockAddrIn& 
 
 		// connection has not set up yet, HELLO msg can't be reliable,
 		// it relies on repeating sending from the client;
+		// but the messge format is same with other messages, so skip two bits for reliable and ack flags;
 		// read and discard the reliable bit;
-		bool bReliable;
-		is.Read(bReliable);
+		bool bSkip;
+		is.Read(bSkip);
+		is.Read(bSkip);
 
 		HelloMsg::Read(is, name);
 
-		SockUtil::LogMessage(SockUtil::LL_Info, string("Received HELLO from ") + name);
+		Utility::LogMessage(LL_Info, string("Received HELLO from ") + name);
 
 		ConnectionPtr newConnPtr = make_shared<Connection>(addr, name, m_NewPlayerId++);
 		ClientProxyPtr newClientPtr = make_shared<ClientProxy>(newConnPtr);
@@ -58,16 +72,7 @@ void NetServer::HandlePacketFromNewClient(InputBitStream& is, const SockAddrIn& 
 void NetServer::SendWelcomePacket(ClientProxyPtr clientPtr)
 {
 	ConnectionPtr connPtr = clientPtr->GetConnection();
-	connPtr->SendWelcomeMsg(connPtr->GetPlayerId());
-}
-
-void NetServer::SetReady(ClientProxyPtr clientPtr, InputBitStream& is)
-{
-	bool bReady;
-	ReadyMsg::Read(is, bReady);
-	clientPtr->SetReady(bReady);
-
-	SockUtil::LogMessage(SockUtil::LL_Info, clientPtr->GetConnection()->GetPlayerName() + string(" is ready"));
+	WelcomeMsg::Send(*connPtr, connPtr->GetPlayerId());
 }
 
 void NetServer::ProcessPacket(ClientProxyPtr clientPtr, InputBitStream& is)
@@ -84,20 +89,13 @@ void NetServer::ProcessPacket(ClientProxyPtr clientPtr, InputBitStream& is)
 	case Msg_Ready:
 		clientPtr->HandleReadyPacket(is);
 		break;
+
+	case Msg_Ack:
+		clientPtr->GetConnection()->ReadAndProcessReliability(is);
 	}
 }
 
-void NetServer::HandleConnectionError(const SockAddrIn& sockAddr)
-{
-
-}
-
 void NetServer::SendOutgoingPackets()
-{
-	SendHeartbeat();
-}
-
-void NetServer::SendHeartbeat()
 {
 	for (auto pair : m_IdToClientMap)
 	{
@@ -105,14 +103,17 @@ void NetServer::SendHeartbeat()
 
 		if (clientPtr->GetReady())
 		{
-			float time = TimeUtil::Instance().GetTimef();
-
-			if (time > m_LastSentHeartbeatTime + cHeartbeatTimeout)
-			{
-				clientPtr->GetConnection()->SendHeartbeatMsg(time);
-
-				m_LastSentHeartbeatTime = time;
-			}
+			clientPtr->GetConnection()->ProcessTimedOutPackets();
+			clientPtr->GetConnection()->ProcessTimedoutAcks();
+			clientPtr->GetConnection()->SendHeartbeat();
+			clientPtr->GetConnection()->ShowDeliveryStats();
 		}
 	}
 }
+
+// To-do...
+void NetServer::HandleConnectionError(const SockAddrIn& sockAddr)
+{
+
+}
+

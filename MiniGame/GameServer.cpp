@@ -6,6 +6,7 @@ bool GameServer::StaticInit()
 	if (server->InitNetManager())
 	{
 		s_Instance.reset(server);
+		Utility::LogMessage(LL_Info, "Server is ready, waiting for players to join...");
 		return true;
 	}
 
@@ -36,13 +37,4 @@ int GameServer::Run()
 
 	// run game loop;
 	return Game::Run();
-}
-
-void GameServer::HandleNewClient()
-{
-
-}
-
-void GameServer::HandleDisconnectedClient()
-{
 }

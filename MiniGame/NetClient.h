@@ -28,6 +28,8 @@ public:
 	void SendOutgoingPackets();
 	void CheckForDisconnects();
 
+	virtual void ShowDroppedPacket(InputBitStream& is, const SockAddrIn& addr) override;
+
 private:
 	NetClient(const string& serverIP, const string& service, int family, const string& playerName);
 	bool Init();

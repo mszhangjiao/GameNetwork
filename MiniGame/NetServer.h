@@ -3,8 +3,6 @@
 class NetServer : public NetManager
 {
 public:
-	const float cHeartbeatTimeout = 1.f;
-
 	static bool StaticInit(const string& service, int family);
 	
 	static NetServer* Instance()
@@ -24,15 +22,14 @@ public:
 	void HandlePacketFromNewClient(InputBitStream& is, const SockAddrIn& addr);
 	void ProcessPacket(ClientProxyPtr clientPtr, InputBitStream& is);
 
+	virtual void ShowDroppedPacket(InputBitStream& is, const SockAddrIn& addr) override;
+
 	//void CheckForDisconnects();
 
 private:
 	NetServer(const string& service, int family);
 
 	void SendWelcomePacket(ClientProxyPtr clientPtr);
-	void SetReady(ClientProxyPtr clientPtr, InputBitStream& is);
-
-	void SendHeartbeat();
 
 	typedef unordered_map<int, ClientProxyPtr> IdToClientMap;
 	typedef unordered_map<SockAddrIn, ClientProxyPtr> AddrToClientMap;
@@ -41,6 +38,4 @@ private:
 	IdToClientMap m_IdToClientMap;
 
 	uint8_t m_NewPlayerId;
-
-	float m_LastSentHeartbeatTime;
 };

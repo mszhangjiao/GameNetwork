@@ -6,6 +6,8 @@ NetClient::NetClient(const string& serverIP, const string& service, int family, 
 	, m_PlayerName(playerName)
 	, m_ServerConnectionPtr(nullptr)
 {
+	SetDropPacketChance(0.1f);
+	SetSimulatedLatency(0.2f);
 }
 
 bool NetClient::StaticInit(const string& serverIP, const string& service, int family, const string& playerName)
@@ -55,11 +57,19 @@ void NetClient::ProcessPacket(InputBitStream& is, const SockAddrIn& addr)
 	case Msg_Heartbeat:
 		if (m_NetState == Net_Welcomed)
 		{
-			m_ServerConnectionPtr->HandleHeartbeatPacket(is);
+			uint32_t heartbeat;
+			if (HeartbeatMsg::Receive(*m_ServerConnectionPtr, is, heartbeat))
+			{
+				char info[64];
+				sprintf_s(info, "Server heartbeat: [%4d]", heartbeat);
+				Utility::LogMessage(LL_Info, string(info));
+			}
 		}
 		break;
-	}
 
+	case Msg_Ack:
+		m_ServerConnectionPtr->ReadAndProcessReliability(is);
+	}
 }
 
 void NetClient::HandleConnectionError(const SockAddrIn& sockAddr)
@@ -77,6 +87,8 @@ void NetClient::SendOutgoingPackets()
 
 	case Net_Welcomed:
 		UpdateSendingInput();
+		m_ServerConnectionPtr->ProcessTimedOutPackets();
+		m_ServerConnectionPtr->ProcessTimedoutAcks();
 		break;
 	}
 }
@@ -88,25 +100,23 @@ void NetClient::CheckForDisconnects()
 
 void NetClient::SendHelloPacket()
 {
-	m_ServerConnectionPtr->SendHelloMsg(m_PlayerName);
-}
-
-void NetClient::SendInputPacket()
-{
-
+	//m_ServerConnectionPtr->SendHelloMsg(m_PlayerName);
+	HelloMsg::Send(*m_ServerConnectionPtr, m_PlayerName);
 }
 
 void NetClient::HandleWelcomePacket(InputBitStream& is)
 {
 	int8_t playerId;
-	WelcomeMsg::Read(is, playerId);
+	if (WelcomeMsg::Receive(*m_ServerConnectionPtr, is, playerId))
+	{
+		m_ServerConnectionPtr->SetPlayerId(playerId);
+		m_ServerConnectionPtr->InitHeartbeat(playerId * 1000);
+		m_NetState = Net_Welcomed;
 
-	m_ServerConnectionPtr->SetPlayerId(playerId);
-	m_NetState = Net_Welcomed;
+		Utility::LogMessage(LL_Info, string("Welcomed by the server, playerId: ") + to_string(playerId));
 
-	SockUtil::LogMessage(SockUtil::LL_Info, string("Welcomed by the server, playerId: ") + to_string(playerId));
-
-	m_ServerConnectionPtr->SendReadyMsg(true);
+		ReadyMsg::Send(*m_ServerConnectionPtr, true);
+	}
 }
 
 void NetClient::UpdateSendingHello()
@@ -119,7 +129,18 @@ void NetClient::UpdateSendingHello()
 	}
 }
 
+void NetClient::ShowDroppedPacket(InputBitStream& is, const SockAddrIn& addr)
+{
+	m_ServerConnectionPtr->ShowDroppedPacket(is);
+}
+
+// To-do...
 void NetClient::UpdateSendingInput()
+{
+
+}
+
+void NetClient::SendInputPacket()
 {
 
 }

@@ -2,6 +2,7 @@
 
 #include <memory>
 #include <string>
+#include <iomanip>
 #include <cstdint>
 #include <vector>
 #include <queue>
@@ -10,6 +11,8 @@
 #include <unordered_map>
 #include <algorithm>
 #include <cassert>
+#include <random>
+#include <iterator>
 
 #ifdef WIN32
 #define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
@@ -31,9 +34,9 @@ using std::iostream;
 
 #include "SockAddrIn.h"
 #include "UDPSocket.h"
-#include "SockUtil.h"
-#include "BitStream.h"
 #include "TimeUtil.h"
+#include "Utility.h"
+#include "BitStream.h"
 #include "NetManager.h"
 #include "Message.h"
 #include "Connection.h"

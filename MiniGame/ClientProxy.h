@@ -25,9 +25,9 @@ public:
 
 	void HandleReadyPacket(InputBitStream& is)
 	{
-		m_Ready = m_ConnectionPtr->HandleReadyPacket(is);		
+		if (ReadyMsg::Receive(*m_ConnectionPtr, is, m_Ready))
+			Utility::LogMessage(LL_Info, m_ConnectionPtr->GetPlayerName() + " is ready: " + to_string(m_Ready));
 	}
-
 
 private:
 	ConnectionPtr m_ConnectionPtr;

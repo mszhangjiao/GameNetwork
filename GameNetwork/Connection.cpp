@@ -1,5 +1,10 @@
 #include "stdafx.h"
 
+bool InFlightPacketLessThan(const InFlightPacket& a, const InFlightPacket& b)
+{
+	return a.GetDispatchTime() < b.GetDispatchTime();
+}
+
 void AckRange::Write(OutputBitStream& os)
 {
 	os.Write(m_Start);
@@ -31,32 +36,41 @@ void AckRange::Read(InputBitStream& is)
 	}
 }
 
-SequenceNumber Connection::WriteReliablility(OutputBitStream& os)
-{
-	SequenceNumber seq = WriteSequence(os);
-	WriteAckData(os);
-
-	return seq;
-}
-
 // return whether we need to drop this packet;
 // true: keep it
 // false: drop it
 bool Connection::ReadAndProcessReliability(InputBitStream& is)
 {
-	bool result = ProcessSequence(is);
+	bool reliable;
+	is.Read(reliable);
+
+	bool isValid = true;
+
+	if (reliable)
+	{
+		isValid = ProcessSequence(is);
+	}
+
 	ProcessAcks(is);
-	return result;
+
+	return isValid;
 }
 
-SequenceNumber Connection::WriteSequence(OutputBitStream& os)
+SequenceNumber Connection::WriteSequence(OutputBitStream& os, bool reliable)
 {
-	SequenceNumber seq = m_NextOutgoingSequence++;
-	os.Write(seq);
+	SequenceNumber seq = 0;
 
-	++m_DispatchedPackets;
+	os.Write(reliable);
+	if (reliable)
+	{
+		seq = m_NextOutgoingSequence++;
+		os.Write(seq);
 
-	m_InFlightPackets.emplace_back(seq);
+		++m_DispatchedPackets;
+
+		m_InFlightPackets.emplace_back(this, seq);
+	}
+
 	return seq;
 }
 
@@ -77,11 +91,15 @@ void Connection::WriteAckData(OutputBitStream& os)
 
 // return whether we need to drop this packet;
 // true: keep it
-// false: drop it
+// false: skip it
 bool Connection::ProcessSequence(InputBitStream& is)
 {
 	SequenceNumber seq;
 	is.Read(seq);
+
+	char info[256];
+	sprintf_s(info, "Received seq: (%d), Expecting: (%d)", seq, m_NextExpectedSequence);
+	Utility::LogMessage(LL_Debug, string(info));
 
 	if (seq == m_NextExpectedSequence)
 	{
@@ -91,12 +109,11 @@ bool Connection::ProcessSequence(InputBitStream& is)
 
 		return true;
 	}
-	else if (seq > m_NextExpectedSequence)
-	{
-		// ack seq will automatically nak the missing packets, 
-		// the sender will process it;
-		AddPendingAck(seq);
-	}
+
+	// ack seq will automatically nak the missing packets, 
+	// we also ack the packet with smaller sequence number,
+	// because each packet will be resent before it's acked;
+	AddPendingAck(seq);
 
 	return false;
 }
@@ -125,102 +142,179 @@ void Connection::ProcessAcks(InputBitStream& is)
 
 		SequenceNumber ackStart = ackRange.GetStart();
 		uint32_t ackEnd = ackStart + ackRange.GetCount();
+		vector<InFlightPacket> packetsToAdd;
+
+		char info[256];
+		sprintf_s(info, "Receive Acks: start(%d), end(%d)", ackStart, ackEnd);
+		Utility::LogMessage(LL_Debug, string(info));
+
+		// handle the sequence number equal or smaller than the first packet in the queue;
 		while (ackStart < ackEnd && !m_InFlightPackets.empty())
 		{
-			const auto& packet = m_InFlightPackets.front();
+			auto& packet = m_InFlightPackets.front();
 			SequenceNumber packetSeq = packet.GetSequenceNumber();
-			if (packetSeq < ackStart)
-			{
-				packet.HandleDeliveryResult(false);
-				m_InFlightPackets.pop_front();
-				++m_DroppedPackets;
-			}
-			else if (packetSeq == ackStart)
+			if (packetSeq == ackStart)
 			{
 				packet.HandleDeliveryResult(true);
 				m_InFlightPackets.pop_front();
-				++m_DeliveredPackets;
+				++ackStart;
+			}
+			else if (packetSeq > ackStart)
+			{
 				++ackStart;
 			}
 			else
 			{
-				++ackStart;
+				// handle this case in next loop;
+				break;
 			}
 		}
+
+		for (auto& packet : m_InFlightPackets)
+		{
+			if (packet.GetSequenceNumber() < ackStart)
+			{
+				if (packet.GetDispatchTime() < TimeUtil::Instance().GetTimef() - cPacketAckTimeout)
+				{
+					packet.HandleDeliveryResult(false);
+
+					// update the timestamp;
+					packet.UpdateDispatchTime(TimeUtil::Instance().GetTimef());
+
+					//++m_ResentPackets;
+				}
+			}
+		}		
 	}
 }
 
+// resending the in-flight packets when they are old enough
+// even if there is no nack
 void Connection::ProcessTimedOutPackets()
 {
-	float timeoutTime = TimeUtil::Instance().GetTimef() - cPacketAckTimeout;
-
-	while (!m_InFlightPackets.empty())
+	for (auto& packet : m_InFlightPackets)
 	{
-		const auto& packet = m_InFlightPackets.front();
-
-		if (packet.GetDispatchTime() < timeoutTime)
+		if (packet.GetDispatchTime() < TimeUtil::Instance().GetTimef() - cPacketAckTimeout)
 		{
 			packet.HandleDeliveryResult(false);
-			m_InFlightPackets.pop_front();
-		}
-		else
-		{
-			// we can skip the rest because the in-flight packets are ordered in time,
-			break;
+
+			// update the timestamp;
+			packet.UpdateDispatchTime(TimeUtil::Instance().GetTimef());
 		}
 	}
 }
+
+// we should send the pending acks in time;
+void Connection::ProcessTimedoutAcks()
+{
+	float time = TimeUtil::Instance().GetTimef();
+
+	if (time > m_LastSentAckTime + cPacketAckTimeout / 2.f
+		&& m_PendingAcks.size() > 0)
+	{
+		AckMsg::Send(*this);
+
+		m_LastSentAckTime = time;
+	}
+}
+
+void Connection::ShowDeliveryStats()
+{
+	float time = TimeUtil::Instance().GetTimef();
+
+	if (time > m_LastShowStatsTime + cShowStatsTimeout)
+	{
+		char stats[256];
+		sprintf_s(stats, "Reliability stats for [%2d]: resent rate[%6.2f%s], dispatched[%4d], acked[%4d], resent[%4d]", 
+			m_PlayerId, static_cast<float>(m_ResentPackets) / m_DispatchedPackets * 100.f, "%",
+			m_DispatchedPackets, m_AckedPackets, m_ResentPackets);
+
+		Utility::LogMessage(LL_Info, string(stats));
+
+		m_LastShowStatsTime = time;
+	}
+}
+
+void Connection::ShowDroppedPacket(InputBitStream& is) const
+{
+	uint8_t msgType;
+	bool reliable;
+	bool hasAck;
+	SequenceNumber seq;
+
+	char info[1024];
+	string msg;
+
+	is.Read(msgType);
+	is.Read(reliable);
+
+	sprintf_s(info, "Dropped Packet: msgType(%d), reliable(%d), ", msgType, reliable);
+	msg = string(info);
+
+	if (reliable)
+	{
+		is.Read(seq);
+		sprintf_s(info, "seq(%d), ", seq);
+		msg += string(info);
+	}
+
+	is.Read(hasAck);
+
+	sprintf_s(info, "hasAck(%d), ", hasAck);
+	msg += string(info);
+
+	if (hasAck)
+	{
+		AckRange range;
+		range.Read(is);
+
+		sprintf_s(info, "AckRange(%d, %d), ", range.GetStart(), range.GetCount());
+		msg += string(info);
+	}
+
+	Utility::LogMessage(LL_Debug, msg);
+}
+
 
 // simply resend the packet if the packet is dropped;
 void Connection::onDelivery(int key, bool bSuccessful)
 {
+	char info[64];
+	sprintf_s(info, "Delivery: seq(%d), success(%d)", key, bSuccessful);
+	Utility::LogMessage(LL_Debug, string(info));
+
+	if (bSuccessful)
+		++m_AckedPackets;
+	else
+		++m_ResentPackets;
+
 	auto& pair = m_OutgoingPackets.find(key);
 	if (pair != m_OutgoingPackets.end())
 	{
 		if (!bSuccessful)
 		{
+			char msg[256];
+			sprintf_s(msg, "Resending packet: %d", key);
+			Utility::LogMessage(LL_Debug, string(msg));
+
 			auto& os = pair->second;
-			//SendPacket(os);
+			SendPacket(os);
 		}
-
-		m_OutgoingPackets.erase(key);
+		else
+		{
+			m_OutgoingPackets.erase(key);
+		}
 	}
 }
 
-void Connection::HandleHeartbeatPacket(InputBitStream& is)
+void Connection::SendHeartbeat()
 {
-	bool reliable;
-	is.Read(reliable);
+	float time = TimeUtil::Instance().GetTimef();
 
-	if (reliable)
+	if (time > m_LastSentHeartbeatTime + cHeartbeatTimeout)
 	{
-		ReadAndProcessReliability(is);
+		HeartbeatMsg::Send(*this, m_Heartbeat++);
+
+		m_LastSentHeartbeatTime = time;
 	}
-
-	float time;
-	HeartbeatMsg::Read(is, time);
-	SockUtil::LogMessage(SockUtil::LL_Info, string("Server heartbeat: ") + to_string(static_cast<int>(time)));
-}
-
-bool Connection::HandleReadyPacket(InputBitStream& is)
-{
-	bool reliable;
-	is.Read(reliable);
-
-	if (reliable)
-	{
-		ReadAndProcessReliability(is);
-	}
-
-	bool ready;
-	ReadyMsg::Read(is, ready);
-
-	SockUtil::LogMessage(SockUtil::LL_Info, m_PlayerName + " is ready: " + to_string(ready));
-
-	return ready;
-}
-
-void Connection::HandleScoreState(InputBitStream& is)
-{
-
 }

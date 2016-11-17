@@ -27,16 +27,10 @@
     <ClInclude Include="SockAddrIn.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="SockServerImpl.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="BitStream.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="UDPSocket.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="SockUtil.h">
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="SharedHeader.h">
@@ -52,6 +46,9 @@
       <Filter>Header Files</Filter>
     </ClInclude>
     <ClInclude Include="Connection.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
+    <ClInclude Include="Utility.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
