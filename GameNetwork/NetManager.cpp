@@ -4,7 +4,7 @@ NetManagerPtr NetManager::s_Instance = nullptr;
 
 bool NetManager::Init()
 {
-	m_UDPSockPtr = Utility::CreateUDPSocket(m_Family);
+	m_UDPSockPtr = SockUtil::CreateUDPSocket(m_Family);
 	if (m_UDPSockPtr == nullptr)
 	{
 		return false;
@@ -22,6 +22,13 @@ bool NetManager::Init()
 
 	return result == NO_ERROR;
 }
+
+void NetManager::ShutdownAndClose()
+{
+	if (m_UDPSockPtr && m_UDPSockPtr->IsOpen())
+		m_UDPSockPtr->ShutdownAndClose();
+}
+
 
 void NetManager::ProcessIncomingPackets()
 {
@@ -65,12 +72,12 @@ void NetManager::ReadIncomingPackets()
 		is.ResetCapacity(readBytes);
 
 		// simulate packet loss
-		float randf = Utility::GetRandomFloat();
+		float randf = MathUtil::GetRandomFloat();
 
 		if (randf >= m_DropPacketChance)
 		{
 			// simulate latency
-			float simulatedReceivedTime = TimeUtil::Instance().GetTimef() + m_SimulatedLatency * Utility::GetRandomFloat();
+			float simulatedReceivedTime = TimeUtil::Instance().GetTimef() + m_SimulatedLatency * MathUtil::GetRandomFloat();
 			m_ReceivedPackets.emplace(is, sockAddr, simulatedReceivedTime);
 		}
 		else
@@ -87,7 +94,7 @@ void NetManager::ReadIncomingPackets()
 			m_DropPacketChance, m_ReceivedNum, m_DroppedNum
 			);
 
-		Utility::LogMessage(LL_Debug, info);
+		LogUtil::LogMessage(LL_Debug, info);
 	}
 }
 

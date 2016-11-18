@@ -6,7 +6,7 @@ bool GameServer::StaticInit()
 	if (server->InitNetManager())
 	{
 		s_Instance.reset(server);
-		Utility::LogMessage(LL_Info, "Server is ready, waiting for players to join...");
+		LogUtil::LogMessage(LL_Info, "Server is ready, waiting for players to join...");
 		return true;
 	}
 
@@ -28,6 +28,7 @@ void GameServer::DoFrame()
 	NetServer::Instance()->ProcessIncomingPackets();
 	Game::DoFrame();
 	NetServer::Instance()->SendOutgoingPackets();
+	NetServer::Instance()->CheckForDisconnects();
 }
 
 // run one time;

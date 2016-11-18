@@ -3,6 +3,15 @@
 class Connection;
 
 // implement Message using variadic template;
+// each message type is defined with variadic template parameters,
+// it uses OutputBitStream and InputBitStream for output and input;
+// it calls Connection functions to write and read reliability data inside a packet;
+
+// Packet format:
+// MessageType: uint8_t
+// Reliable: bool [+ SequenceNumber]
+// HasAck: bool [+ AckRange]
+// Message data: variadic...
 template<uint8_t MessageType, bool Reliable, typename ...Types>
 class Message
 {
@@ -64,6 +73,7 @@ public:
 	}
 };
 
+// message type definition
 enum MsgType
 {
 	Msg_Hello = 0,
@@ -74,6 +84,8 @@ enum MsgType
 	Msg_Max,
 };
 
+// message class definition: how simple it is!
+// params: MesgType, Reliable, variadic...
 typedef Message<Msg_Hello, false, string> HelloMsg;
 typedef Message<Msg_Welcome, false, int8_t> WelcomeMsg;
 typedef Message<Msg_Ready, true, bool> ReadyMsg;

@@ -1,5 +1,9 @@
 #pragma once
 
+// defines the server networking features:
+// - manages the client proxies/connections on the server;
+// - send packets to connected clients;
+// - handles received packets;
 class NetServer : public NetManager
 {
 public:
@@ -23,8 +27,7 @@ public:
 	void ProcessPacket(ClientProxyPtr clientPtr, InputBitStream& is);
 
 	virtual void ShowDroppedPacket(InputBitStream& is, const SockAddrIn& addr) override;
-
-	//void CheckForDisconnects();
+	void CheckForDisconnects();
 
 private:
 	NetServer(const string& service, int family);

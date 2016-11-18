@@ -6,6 +6,8 @@
 
 using namespace std;
 
+// it defines client specific features, again the "game" is supper simple now:
+// after connecting to a server, the client simply receives the heart beats from server and show them;
 class GameClient : public Game
 {
 public:

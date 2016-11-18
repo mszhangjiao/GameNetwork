@@ -1,7 +1,10 @@
 #pragma once
 
-// SockAddrIn strcture 
+// SockAddrIn strcture
+// It derives from sockaddr_storage in order to support IPv4 and IPv6
 // Encapsulate SOCKADDR_STORAGE (IPv4: SOCKADDR_IN, IPv6: SOCKADDR_IN6) structures
+
+// NOTES: IPv6 is not tested...
 
 struct SockAddrIn : public sockaddr_storage
 {
@@ -100,15 +103,15 @@ struct SockAddrIn : public sockaddr_storage
 		return reinterpret_cast<LPSOCKADDR>(this);
   	}
 
-	//operator const IN6_ADDR*() const
-	//{
-	//	return reinterpret_cast<const IN6_ADDR*>(this);
-	//}
+	operator const IN6_ADDR*() const
+	{
+		return reinterpret_cast<const IN6_ADDR*>(this);
+	}
 
-	//operator PIN6_ADDR()
-	//{
-	//	return reinterpret_cast<PIN6_ADDR>(this);
-	//}
+	operator PIN6_ADDR()
+	{
+		return reinterpret_cast<PIN6_ADDR>(this);
+	}
 
 	size_t Size() const
 	{
@@ -139,6 +142,7 @@ struct SockAddrIn : public sockaddr_storage
 		memcpy(this, addr, len);
 	}
 
+	// the hash function is used in hash<SockAddrIn> struct
 	size_t GetHash() const
 	{
 		return (GetIPAddr()) |
@@ -151,6 +155,8 @@ struct SockAddrIn : public sockaddr_storage
 
 typedef shared_ptr<SockAddrIn> SockAddrInPtr;
 
+// the hash functor is used in NetServer class for unordered_map<SockAddrIn, ClientProxyPtr> AddrToClientMap,
+// where SockAddrIn is used as hash key;
 namespace std
 {
 	template<>

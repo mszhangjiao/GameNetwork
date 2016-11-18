@@ -12,7 +12,7 @@ int UDPSocket::Bind(const char* host, const char* service)
 		string msg = "Failed in bind: not able to create SockAddrIn";
 		int error = GetLastError();
 
-		Utility::LogMessage(LL_Fatal, error, msg);
+		LogUtil::LogMessage(LL_Fatal, error, msg);
 		return error;
 	}
 
@@ -22,7 +22,7 @@ int UDPSocket::Bind(const char* host, const char* service)
 		string msg = "Failed to bind addr";
 		int error = GetLastError();
 
-		Utility::LogMessage(LL_Fatal, error, msg);
+		LogUtil::LogMessage(LL_Fatal, error, msg);
 		return error;
 	}
 	else
@@ -46,7 +46,7 @@ int UDPSocket::SetNonBlockingMode(bool bNonBlock)
 		string msg = "Failed to set non-block socket";
 		int error = GetLastError();
 
-		Utility::LogMessage(LL_Fatal, error, msg);
+		LogUtil::LogMessage(LL_Fatal, error, msg);
 		return error;
 	}
 	else

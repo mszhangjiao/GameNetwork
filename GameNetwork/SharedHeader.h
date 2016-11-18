@@ -1,5 +1,13 @@
 #pragma once
 
+// This file includes headers used in this project
+// the headers are in order from common to specific
+// the order also considers the dependency among them
+
+// this file should be included in other stdafx.h files of this project
+// and other dependent projects
+
+// C++ headers
 #include <memory>
 #include <string>
 #include <iomanip>
@@ -14,15 +22,6 @@
 #include <random>
 #include <iterator>
 
-#ifdef WIN32
-#define WIN32_LEAN_AND_MEAN             // Exclude rarely-used stuff from Windows headers
-#define NOMINMAX
-
-#include <Windows.h>
-#include <winsock2.h>
-#include <ws2tcpip.h>
-#endif
-
 using std::shared_ptr;
 using std::unique_ptr;
 using std::string;
@@ -32,9 +31,18 @@ using std::map;
 using std::unordered_map;
 using std::iostream;
 
+// Windows headers
+#ifdef WIN32
+#define NOMINMAX
+
+#include <winsock2.h>
+#include <ws2tcpip.h>
+#include <Windows.h>
+#endif
+
+// Project headers
 #include "SockAddrIn.h"
 #include "UDPSocket.h"
-#include "TimeUtil.h"
 #include "Utility.h"
 #include "BitStream.h"
 #include "NetManager.h"

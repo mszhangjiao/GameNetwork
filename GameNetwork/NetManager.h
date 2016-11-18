@@ -1,12 +1,5 @@
 #pragma once
 
-enum NetClientState
-{
-	Net_None,
-	Net_Hello,
-	Net_Welcomed
-};
-
 struct ReceivedPacket
 {
 	ReceivedPacket(const InputBitStream& is, const SockAddrIn& addr, float time)
@@ -20,12 +13,14 @@ struct ReceivedPacket
 	float m_ReceivedTime;
 };
 
+// base class for networking driver, defining common networking functionality;
+// it manages a UDP socket, send and receive packets;
 class NetManager
 {
 public:
-	static const int cMaxPacketsPerFrame = 1;
+	const int cMaxPacketsPerFrame = 1;
 	static const int cPacketBufferSize = 1500;
-
+	const float cDisconnectTimeoutValue = 30.f;
 
 	static shared_ptr<NetManager> Instance()
 	{
@@ -54,6 +49,7 @@ public:
 	}
 
 	bool Init();
+	void ShutdownAndClose();
 	void ProcessIncomingPackets();
 	void SendPacket(const OutputBitStream& os, const SockAddrIn& addr);
 

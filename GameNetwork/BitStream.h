@@ -2,6 +2,8 @@
 
 using namespace std;
 
+// base class for OuputBitStream and InputBitStream,
+// mainly manage the stream buffer;
 class BitStream
 {
 public:
@@ -83,6 +85,8 @@ protected:
 	bool m_OwnBuffer;
 };
 
+// write various types of data into bit stream,
+// support variadic template write;
 class OutputBitStream : public BitStream
 {
 public:
@@ -119,17 +123,17 @@ public:
 	}
 
 	// generic write for primitive data types;
-	template <typename Message>
-	void Write(const Message& data, size_t bitCount = sizeof(Message) << 3)
+	template <typename T>
+	void Write(const T& data, size_t bitCount = sizeof(T) << 3)
 	{
-		static_assert(is_arithmetic<Message>::value || is_enum<Message>::value, "Generic write only supports primitive data types");
+		static_assert(is_arithmetic<T>::value || is_enum<T>::value, "Generic write only supports primitive data types");
 
 		WriteBits(&data, bitCount);
 	}
 
 	// write vector of primitive data types;
-	template <typename Message>
-	void Write(const vector<Message>& vData)
+	template <typename T>
+	void Write(const vector<T>& vData)
 	{
 		size_t num = vData.size();
 		Write(num);
@@ -139,16 +143,14 @@ public:
 		}
 	}
 
-	template <typename Message, typename ...Types>
-	void Write(const Message& firstArg, const Types& ...args)
+	template <typename T, typename ...Types>
+	void Write(const T& firstArg, const Types& ...args)
 	{
 		Write(firstArg);
 		Write(args...);
 	}
 
-	void Write()
-	{
-	}
+	void Write() {}
 
 	void Append(const OutputBitStream& os)
 	{
@@ -163,6 +165,8 @@ public:
 	}
 };
 
+// read various types of data from bit stream,
+// support variadic template read;
 class InputBitStream : public BitStream
 {
 public:
@@ -197,30 +201,32 @@ public:
 	}
 
 	// generic read for primitive data types;
-	template <typename Message>
-	void Read(Message& data, size_t bitCount = sizeof(Message) << 3)
+	template <typename T>
+	void Read(T& data, size_t bitCount = sizeof(T) << 3)
 	{
-		static_assert(is_arithmetic<Message>::value || is_enum<Message>::value, "Generic read only supports primitive data types");
+		static_assert(is_arithmetic<T>::value || is_enum<T>::value, "Generic read only supports primitive data types");
 
 		ReadBits(&data, bitCount);
 	}
 
 	// read vector of primitive data types;
-	template <typename Message>
-	void Read(vector<Message>& vData)
+	template <typename T>
+	void Read(vector<T>& vData)
 	{
 		size_t num;
 		Read(num);
 		vData.resize(num);
-		for (Message& elem : vData)
+		for (T& elem : vData)
 		{
 			Read(elem);
 		}
 	}
 
+	void Read() {}
+
 	// variadic read function
-	template <typename Message, typename ...Types>
-	void Read(const Message& firstArg, const Types& ...args)
+	template <typename T, typename ...Types>
+	void Read(const T& firstArg, const Types& ...args)
 	{
 		Read(firstArg);
 		Read(args...);

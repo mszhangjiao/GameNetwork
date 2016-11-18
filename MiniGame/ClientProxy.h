@@ -1,5 +1,8 @@
 #pragma once
 
+// it's used on server side representing a connected client;
+// it's on top of Connection layer, so we are able to add more features to it apart from the client connection;
+// it doesn't have much more than a connection right now, because we don't have a game yet...
 class ClientProxy
 {
 public:
@@ -26,7 +29,14 @@ public:
 	void HandleReadyPacket(InputBitStream& is)
 	{
 		if (ReadyMsg::Receive(*m_ConnectionPtr, is, m_Ready))
-			Utility::LogMessage(LL_Info, m_ConnectionPtr->GetPlayerName() + " is ready: " + to_string(m_Ready));
+		{
+			LogUtil::LogMessage(LL_Info, m_ConnectionPtr->GetPlayerName() + " is ready: " + to_string(m_Ready));
+
+			if (m_Ready)
+			{
+				m_ConnectionPtr->InitHeartbeat(m_ConnectionPtr->GetPlayerId() * 1000);
+			}
+		}
 	}
 
 private:

@@ -7,12 +7,12 @@ Game::Game()
 	, m_NetFamily(cNetFamily)
 	, m_IsRunning(true)
 {
-	Utility::StaticInit();
+	SockUtil::StaticInit();
 }
 
 Game::~Game()
 {
-	Utility::CleanUp();
+	SockUtil::CleanUp();
 }
 
 int Game::Run()

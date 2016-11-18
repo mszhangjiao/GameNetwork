@@ -2,6 +2,8 @@
 
 typedef uint16_t SequenceNumber;
 
+// this interface is used to notify the sender (or other object interested) 
+// about the packet delivery result;
 class DeliveryHandler
 {
 public:
@@ -10,6 +12,8 @@ public:
 
 typedef shared_ptr<DeliveryHandler> DeliveryHandlerPtr;
 
+// this class represents the packets being sent and before acked,
+// it's used to notify the delivery result;
 class InFlightPacket
 {
 public:
@@ -47,7 +51,8 @@ private:
 	DeliveryHandler* m_DeliveryHandler;
 };
 
-struct AckRange
+// this class records a consecutive range of acks
+class AckRange
 {
 private:
 	SequenceNumber m_Start;
@@ -92,11 +97,8 @@ public:
 };
 
 // Connection class guanrantees the packets to be delivered and in order;
-// the out-of-order packets will be kept in the queue until the previous packets are received;
-// Packet format:
-// MessageType: uint8_t
-// Reliable: bool [+ SequenceNumber]
-// HasAck: bool [+ AckRange]
+// the out-of-order packets will be discarded and acked, so the sender
+// will resend the lost packets;
 class Connection : public DeliveryHandler
 {
 public:
@@ -117,6 +119,7 @@ public:
 		, m_LastSentAckTime(0.f)
 		, m_LastShowStatsTime(0.f)
 		, m_LastSentHeartbeatTime(0.f)
+		, m_LastReceivedPacketTime(0.f)
 		, m_Heartbeat(0)
 	{
 	}
@@ -141,6 +144,16 @@ public:
 		m_PlayerId = playerId;
 	}
 
+	void SetLastReceivedPacketTime(float time)
+	{
+		m_LastReceivedPacketTime = time;
+	}
+
+	float GetLastReceivedPacketTime()
+	{
+		return m_LastReceivedPacketTime;
+	}
+
 	void InitHeartbeat(int32_t start)
 	{
 		m_Heartbeat = start;
@@ -159,7 +172,7 @@ public:
 	// implement DeliveryHandler interface;
 	virtual void onDelivery(int key, bool bSuccessful) override;
 
-	SequenceNumber WriteSequence(OutputBitStream& os, bool reliable);
+	// functions to implement reliabile UDP;
 	SequenceNumber WriteReliability(OutputBitStream& os, bool reliable)
 	{
 		SequenceNumber seq = WriteSequence(os, reliable);
@@ -176,37 +189,43 @@ public:
 		m_OutgoingPackets.emplace(seq, os);
 	}
 
+	// send heartbeat to connected clients;
 	void SendHeartbeat();
+
+	// show info and stats;
 	void ShowDeliveryStats();
-
 	void ShowDroppedPacket(InputBitStream& is) const;
-private:
-	void WriteAckData(OutputBitStream& os);
 
+private:
+	SequenceNumber WriteSequence(OutputBitStream& os, bool reliable);
+	void WriteAckData(OutputBitStream& os);
 	bool ProcessSequence(InputBitStream& is);
 	void ProcessAcks(InputBitStream& is);
 	void AddPendingAck(SequenceNumber seq);
 
-	typedef map<SequenceNumber, OutputBitStream> SeqToOutputBitStreamMap;
-	SeqToOutputBitStreamMap m_OutgoingPackets;
-
-	deque<InFlightPacket> m_InFlightPackets;
-	deque<AckRange> m_PendingAcks;
-
+	// basic connection info
 	SockAddrIn m_RemoteAddr;
 	string m_PlayerName;
 	uint8_t m_PlayerId;
 
+	// for reliability
+	typedef map<SequenceNumber, OutputBitStream> SeqToOutputBitStreamMap;
+	SeqToOutputBitStreamMap m_OutgoingPackets;
+	deque<InFlightPacket> m_InFlightPackets;
+	deque<AckRange> m_PendingAcks;
 	SequenceNumber m_NextOutgoingSequence;
 	SequenceNumber m_NextExpectedSequence;
 
+	// for stats
 	int m_DispatchedPackets;
 	int m_ResentPackets;
 	int m_AckedPackets;
 
+	// control times;
 	float m_LastSentAckTime;
 	float m_LastShowStatsTime;
 	float m_LastSentHeartbeatTime;
+	float m_LastReceivedPacketTime;
 
 	uint32_t m_Heartbeat;
 };

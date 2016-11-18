@@ -58,7 +58,7 @@ void NetServer::HandlePacketFromNewClient(InputBitStream& is, const SockAddrIn& 
 
 		HelloMsg::Read(is, name);
 
-		Utility::LogMessage(LL_Info, string("Received HELLO from ") + name);
+		LogUtil::LogMessage(LL_Info, string("Received HELLO from ") + name);
 
 		ConnectionPtr newConnPtr = make_shared<Connection>(addr, name, m_NewPlayerId++);
 		ClientProxyPtr newClientPtr = make_shared<ClientProxy>(newConnPtr);
@@ -91,7 +91,28 @@ void NetServer::ProcessPacket(ClientProxyPtr clientPtr, InputBitStream& is)
 		break;
 
 	case Msg_Ack:
-		clientPtr->GetConnection()->ReadAndProcessReliability(is);
+		AckMsg::Receive(*clientPtr->GetConnection(), is);
+		break;
+	}
+
+	clientPtr->GetConnection()->SetLastReceivedPacketTime(TimeUtil::Instance().GetTimef());
+}
+
+void NetServer::CheckForDisconnects()
+{
+	for (auto pair : m_IdToClientMap)
+	{
+		ClientProxyPtr clientPtr = pair.second;
+
+		if (clientPtr->GetReady() && clientPtr->GetConnection()->GetLastReceivedPacketTime() < TimeUtil::Instance().GetTimef() - cDisconnectTimeoutValue)
+		{
+			char info[64];
+			sprintf_s(info, "Disconnected: player id[%d], player name[%s]", clientPtr->GetConnection()->GetPlayerId(), clientPtr->GetConnection()->GetPlayerName().c_str());
+			LogUtil::LogMessage(LL_Info, info);
+
+			m_IdToClientMap.erase(pair.first);
+			break;
+		}
 	}
 }
 
@@ -103,6 +124,7 @@ void NetServer::SendOutgoingPackets()
 
 		if (clientPtr->GetReady())
 		{
+			// don't resend message if the recipiant doesn't respond, it may be just disconnected...
 			clientPtr->GetConnection()->ProcessTimedOutPackets();
 			clientPtr->GetConnection()->ProcessTimedoutAcks();
 			clientPtr->GetConnection()->SendHeartbeat();

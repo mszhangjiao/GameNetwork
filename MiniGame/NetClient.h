@@ -1,5 +1,17 @@
 #pragma once
 
+enum NetClientState
+{
+	Net_None,
+	Net_Hello,
+	Net_Welcomed,
+	Net_Disconnected,
+};
+
+// defines the client networking features:
+// - set up connection with server, 
+// - maintains client network states;
+// - handles received packets;
 class NetClient : public NetManager
 {
 public:
@@ -22,11 +34,17 @@ public:
 		return m_NetState;
 	}
 
+	bool IsClientDisconnected()
+	{
+		return m_NetState == Net_Disconnected;
+	}
+
 	virtual void ProcessPacket(InputBitStream& is, const SockAddrIn& addr) override;
 	virtual void HandleConnectionError(const SockAddrIn& sockAddr) override;
 
 	void SendOutgoingPackets();
 	void CheckForDisconnects();
+	void ShutdownAndClose();
 
 	virtual void ShowDroppedPacket(InputBitStream& is, const SockAddrIn& addr) override;
 
@@ -40,10 +58,6 @@ private:
 
 	// Packets handling functions;
 	void HandleWelcomePacket(InputBitStream& is);
-	void HandleHeartbeatPacket(InputBitStream& is);
-	void HandleStatePacket(InputBitStream& is);
-
-	void HandleScoreState(InputBitStream& is);
 
 	// Update functions;
 	void UpdateSendingHello();

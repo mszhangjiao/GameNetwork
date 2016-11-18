@@ -139,7 +139,6 @@
     <ClInclude Include="Utility.h" />
     <ClInclude Include="stdafx.h" />
     <ClInclude Include="targetver.h" />
-    <ClInclude Include="TimeUtil.h" />
     <ClInclude Include="UDPSocket.h" />
   </ItemGroup>
   <ItemGroup>
@@ -147,14 +146,13 @@
     <ClCompile Include="NetManager.cpp" />
     <ClCompile Include="Connection.cpp" />
     <ClCompile Include="SockAddrIn.cpp" />
-    <ClCompile Include="SockUtil.cpp" />
+    <ClCompile Include="Utility.cpp" />
     <ClCompile Include="stdafx.cpp">
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Debug|x64'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|Win32'">Create</PrecompiledHeader>
       <PrecompiledHeader Condition="'$(Configuration)|$(Platform)'=='Release|x64'">Create</PrecompiledHeader>
     </ClCompile>
-    <ClCompile Include="TimeUtil.cpp" />
     <ClCompile Include="UDPSocket.cpp" />
   </ItemGroup>
   <Import Project="$(VCTargetsPath)\Microsoft.Cpp.targets" />

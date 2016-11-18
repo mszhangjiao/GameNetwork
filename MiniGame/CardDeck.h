@@ -1,5 +1,6 @@
 #pragma once
 
+// I wanted to implement a simple card game, but ran out of time...
 typedef uint8_t Card;
 class CardDeck
 {

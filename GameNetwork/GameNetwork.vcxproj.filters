@@ -36,9 +36,6 @@
     <ClInclude Include="SharedHeader.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="TimeUtil.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="NetManager.h">
       <Filter>Header Files</Filter>
     </ClInclude>
@@ -59,22 +56,19 @@
     <ClCompile Include="SockAddrIn.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="SockUtil.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="BitStream.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="UDPSocket.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
-    <ClCompile Include="TimeUtil.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
     <ClCompile Include="NetManager.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="Connection.cpp">
+      <Filter>Source Files</Filter>
+    </ClCompile>
+    <ClCompile Include="Utility.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
   </ItemGroup>

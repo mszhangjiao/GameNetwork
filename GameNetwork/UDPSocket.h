@@ -1,5 +1,7 @@
 #pragma once
 
+// this is a simple class for UDP socket;
+// currently it only contains the basic functions necessary for this project;
 class UDPSocket
 {
 public:
@@ -44,7 +46,7 @@ private:
 		closesocket(sock);
 	}
 
-	friend class Utility;
+	friend class SockUtil;
 	SOCKET m_Socket;
 	int m_Family;
 };

@@ -7,7 +7,7 @@ NetClient::NetClient(const string& serverIP, const string& service, int family, 
 	, m_ServerConnectionPtr(nullptr)
 {
 	SetDropPacketChance(0.1f);
-	SetSimulatedLatency(0.2f);
+	SetSimulatedLatency(0.1f);
 }
 
 bool NetClient::StaticInit(const string& serverIP, const string& service, int family, const string& playerName)
@@ -34,6 +34,15 @@ bool NetClient::Init()
 	return result;
 }
 
+void NetClient::ShutdownAndClose()
+{
+	NetManager::ShutdownAndClose();
+
+	m_ServerSockAddr = SockAddrIn::NullAddr;
+	m_ServerConnectionPtr = nullptr;
+}
+
+
 void NetClient::ProcessPacket(InputBitStream& is, const SockAddrIn& addr)
 {
 	// ignore msgs from unknown hosts;
@@ -41,6 +50,8 @@ void NetClient::ProcessPacket(InputBitStream& is, const SockAddrIn& addr)
 	{
 		return;
 	}
+
+	m_ServerConnectionPtr->SetLastReceivedPacketTime(TimeUtil::Instance().GetTimef());
 
 	uint8_t msgType;
 	is.Read(msgType);
@@ -62,13 +73,13 @@ void NetClient::ProcessPacket(InputBitStream& is, const SockAddrIn& addr)
 			{
 				char info[64];
 				sprintf_s(info, "Server heartbeat: [%4d]", heartbeat);
-				Utility::LogMessage(LL_Info, string(info));
+				LogUtil::LogMessage(LL_Info, string(info));
 			}
 		}
 		break;
 
 	case Msg_Ack:
-		m_ServerConnectionPtr->ReadAndProcessReliability(is);
+		AckMsg::Receive(*m_ServerConnectionPtr, is);
 	}
 }
 
@@ -87,15 +98,25 @@ void NetClient::SendOutgoingPackets()
 
 	case Net_Welcomed:
 		UpdateSendingInput();
+		// don't resend message if the recipiant doesn't respond, it may be just disconnected...
 		m_ServerConnectionPtr->ProcessTimedOutPackets();
 		m_ServerConnectionPtr->ProcessTimedoutAcks();
 		break;
 	}
 }
 
+// shutdown the network with 
 void NetClient::CheckForDisconnects()
-{
+{	
+	if (m_NetState == Net_Welcomed && m_ServerConnectionPtr->GetLastReceivedPacketTime() < TimeUtil::Instance().GetTimef() - cDisconnectTimeoutValue)
+	{
+		char info[64];
+		sprintf_s(info, "Disconnected: player id[%d], player name[%s]", m_ServerConnectionPtr->GetPlayerId(), m_ServerConnectionPtr->GetPlayerName().c_str());
+		LogUtil::LogMessage(LL_Info, info);
 
+		ShutdownAndClose();
+		m_NetState = Net_Disconnected;
+	}
 }
 
 void NetClient::SendHelloPacket()
@@ -110,10 +131,9 @@ void NetClient::HandleWelcomePacket(InputBitStream& is)
 	if (WelcomeMsg::Receive(*m_ServerConnectionPtr, is, playerId))
 	{
 		m_ServerConnectionPtr->SetPlayerId(playerId);
-		m_ServerConnectionPtr->InitHeartbeat(playerId * 1000);
 		m_NetState = Net_Welcomed;
 
-		Utility::LogMessage(LL_Info, string("Welcomed by the server, playerId: ") + to_string(playerId));
+		LogUtil::LogMessage(LL_Info, string("Welcomed by the server, playerId: ") + to_string(playerId));
 
 		ReadyMsg::Send(*m_ServerConnectionPtr, true);
 	}

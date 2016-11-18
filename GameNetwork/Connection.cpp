@@ -99,7 +99,7 @@ bool Connection::ProcessSequence(InputBitStream& is)
 
 	char info[256];
 	sprintf_s(info, "Received seq: (%d), Expecting: (%d)", seq, m_NextExpectedSequence);
-	Utility::LogMessage(LL_Debug, string(info));
+	LogUtil::LogMessage(LL_Debug, string(info));
 
 	if (seq == m_NextExpectedSequence)
 	{
@@ -146,7 +146,7 @@ void Connection::ProcessAcks(InputBitStream& is)
 
 		char info[256];
 		sprintf_s(info, "Receive Acks: start(%d), end(%d)", ackStart, ackEnd);
-		Utility::LogMessage(LL_Debug, string(info));
+		LogUtil::LogMessage(LL_Debug, string(info));
 
 		// handle the sequence number equal or smaller than the first packet in the queue;
 		while (ackStart < ackEnd && !m_InFlightPackets.empty())
@@ -180,8 +180,6 @@ void Connection::ProcessAcks(InputBitStream& is)
 
 					// update the timestamp;
 					packet.UpdateDispatchTime(TimeUtil::Instance().GetTimef());
-
-					//++m_ResentPackets;
 				}
 			}
 		}		
@@ -205,12 +203,15 @@ void Connection::ProcessTimedOutPackets()
 }
 
 // we should send the pending acks in time;
+// normally we pigback the Acks in the outgoing packets,
+// this is the only case that we send a sole AckMsg, 
+// just in case the pending acks are not sent in time;
 void Connection::ProcessTimedoutAcks()
 {
 	float time = TimeUtil::Instance().GetTimef();
 
-	if (time > m_LastSentAckTime + cPacketAckTimeout / 2.f
-		&& m_PendingAcks.size() > 0)
+	if (m_PendingAcks.size() > 0
+		&& time > m_LastSentAckTime + cPacketAckTimeout / 2.f)
 	{
 		AckMsg::Send(*this);
 
@@ -225,11 +226,12 @@ void Connection::ShowDeliveryStats()
 	if (time > m_LastShowStatsTime + cShowStatsTimeout)
 	{
 		char stats[256];
-		sprintf_s(stats, "Reliability stats for [%2d]: resent rate[%6.2f%s], dispatched[%4d], acked[%4d], resent[%4d]", 
-			m_PlayerId, static_cast<float>(m_ResentPackets) / m_DispatchedPackets * 100.f, "%",
+		sprintf_s(stats, "Stats for [%6s]: heartbeat[%4d], resent rate[%6.2f%s], dispatched[%4d], acked[%4d], resent[%4d]", 
+			m_PlayerName.c_str(), m_Heartbeat,
+			static_cast<float>(m_ResentPackets) / m_DispatchedPackets * 100.f, "%",
 			m_DispatchedPackets, m_AckedPackets, m_ResentPackets);
 
-		Utility::LogMessage(LL_Info, string(stats));
+		LogUtil::LogMessage(LL_Info, string(stats));
 
 		m_LastShowStatsTime = time;
 	}
@@ -272,7 +274,7 @@ void Connection::ShowDroppedPacket(InputBitStream& is) const
 		msg += string(info);
 	}
 
-	Utility::LogMessage(LL_Debug, msg);
+	LogUtil::LogMessage(LL_Debug, msg);
 }
 
 
@@ -281,7 +283,7 @@ void Connection::onDelivery(int key, bool bSuccessful)
 {
 	char info[64];
 	sprintf_s(info, "Delivery: seq(%d), success(%d)", key, bSuccessful);
-	Utility::LogMessage(LL_Debug, string(info));
+	LogUtil::LogMessage(LL_Debug, string(info));
 
 	if (bSuccessful)
 		++m_AckedPackets;
@@ -295,7 +297,7 @@ void Connection::onDelivery(int key, bool bSuccessful)
 		{
 			char msg[256];
 			sprintf_s(msg, "Resending packet: %d", key);
-			Utility::LogMessage(LL_Debug, string(msg));
+			LogUtil::LogMessage(LL_Debug, string(msg));
 
 			auto& os = pair->second;
 			SendPacket(os);

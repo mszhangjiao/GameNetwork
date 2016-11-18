@@ -4,7 +4,7 @@
 #pragma comment(lib, "ws2_32.lib")
 #endif
 
-bool Utility::StaticInit()
+bool SockUtil::StaticInit()
 {
 #ifdef WIN32
 	WSADATA data = { 0 };
@@ -15,14 +15,14 @@ bool Utility::StaticInit()
 #endif
 }
 
-void Utility::CleanUp()
+void SockUtil::CleanUp()
 {
 #ifdef WIN32
 	WSACleanup();
 #endif
 }
 
-UDPSocketPtr Utility::CreateUDPSocket(int family)
+UDPSocketPtr SockUtil::CreateUDPSocket(int family)
 {
 	SOCKET sock;
 	int type = SOCK_DGRAM;
@@ -37,13 +37,13 @@ UDPSocketPtr Utility::CreateUDPSocket(int family)
 		string msg = "Failed to create UDP socket";
 		int error = GetLastError();
 
-		Utility::LogMessage(LL_Fatal, error, msg);
+		LogUtil::LogMessage(LL_Fatal, error, msg);
 
 		return nullptr;
 	}
 }
 
-string Utility::GetLevelString(LogLevel level)
+string LogUtil::GetLevelString(LogLevel level)
 {
 	switch (level)
 	{
@@ -62,7 +62,7 @@ string Utility::GetLevelString(LogLevel level)
 	}
 }
 
-void Utility::LogMessage(LogLevel level, string s)
+void LogUtil::LogMessage(LogLevel level, string s)
 {
 	char info[16];
 	sprintf_s(info, "%6.2f: ", TimeUtil::Instance().GetTimef());
@@ -80,7 +80,7 @@ void Utility::LogMessage(LogLevel level, string s)
 		cout << msg;
 }
 
-void Utility::LogMessage(LogLevel level, int errorCode, string s)
+void LogUtil::LogMessage(LogLevel level, int errorCode, string s)
 {
 	char info[16];
 	sprintf_s(info, "%6.2f: ", TimeUtil::Instance().GetTimef());
@@ -98,4 +98,39 @@ void Utility::LogMessage(LogLevel level, int errorCode, string s)
 
 	if (level != LL_Debug)
 		cout << msg;
+}
+
+TimeUtil TimeUtil::s_Instance;
+LARGE_INTEGER TimeUtil::s_StartTime = { 0 };
+
+TimeUtil::TimeUtil()
+{
+	LARGE_INTEGER perFreq;
+
+	QueryPerformanceFrequency(&perFreq);
+	m_PerfCountDuration = 1.0 / perFreq.QuadPart;
+
+	QueryPerformanceCounter(&s_StartTime);
+	m_LastFrameStartTime = GetTime();
+
+	srand(static_cast<int>(GetTime()));
+}
+
+void TimeUtil::Update()
+{
+	double curTime = GetTime();
+	m_DeltaTime = curTime - m_LastFrameStartTime;
+	m_LastFrameStartTime = curTime;
+	m_FrameStartTime = m_LastFrameStartTime;
+}
+
+double TimeUtil::GetTime() const
+{
+	LARGE_INTEGER curTime;
+	LARGE_INTEGER timeSinceStart;
+
+	QueryPerformanceCounter(&curTime);
+
+	timeSinceStart.QuadPart = curTime.QuadPart - s_StartTime.QuadPart;
+	return timeSinceStart.QuadPart * m_PerfCountDuration;
 }

@@ -6,6 +6,9 @@ bool GameClient::StaticInit(const string& serverIP, const string& playerName)
 	if (client->InitNetManager())
 	{
 		s_Instance.reset(client);
+		char info[64];
+		sprintf_s(info, "Client %s is ready, connecting to server %s ...", playerName.c_str(), serverIP.c_str());
+		LogUtil::LogMessage(LL_Info, info);
 		return true;
 	}
 
@@ -25,7 +28,13 @@ bool GameClient::InitNetManager()
 
 void GameClient::DoFrame()
 {
-	NetClient::Instance()->ProcessIncomingPackets();
-	Game::DoFrame();
-	NetClient::Instance()->SendOutgoingPackets();
+	NetClient::Instance()->CheckForDisconnects();
+	
+	if (!NetClient::Instance()->IsClientDisconnected())
+	{
+		NetClient::Instance()->ProcessIncomingPackets();
+		NetClient::Instance()->SendOutgoingPackets();
+
+		Game::DoFrame();
+	}
 }
