@@ -18,17 +18,19 @@ enum LogLevel
 	LL_Fatal,
 };
 
-// Todo: the logUtil is not easy to use right now, need rewrite to support easier logging;
-// the only good thing about it is it support log level, so we can define the different behavior accordingly;
-class LogUtil
+class StringUtil
 {
 public:
-	static void LogMessage(LogLevel level, string s);
-	static void LogMessage(LogLevel level, int errorCode, string s);
+	static const char* GetLevelString(LogLevel level);
 
-private:
-	static string GetLevelString(LogLevel level);
+	static void Log(LogLevel level, const char* format, ...);
 };
+
+#define DEBUG(...) StringUtil::Log(LL_Debug, __VA_ARGS__);
+#define INFO(...) StringUtil::Log(LL_Info, __VA_ARGS__);
+#define WARN(...) StringUtil::Log(LL_Warning, __VA_ARGS__);
+#define ERR(...) StringUtil::Log(LL_Error, __VA_ARGS__);
+#define FATAL(...) StringUtil::Log(LL_Fatal, __VA_ARGS__);
 
 // random float number function is provided
 class MathUtil

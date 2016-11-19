@@ -2,12 +2,6 @@
     CONSOLE APPLICATION : MiniGame Project Overview
 ========================================================================
 
-AppWizard has created this MiniGame application for you.
-
-This file contains a summary of what you will find in each of the files that
-make up your MiniGame application.
-
-
 MiniGame
 
 - It implements a Client-Server architecture where the server communicates with

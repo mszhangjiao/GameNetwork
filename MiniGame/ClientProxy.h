@@ -30,7 +30,7 @@ public:
 	{
 		if (ReadyMsg::Receive(*m_ConnectionPtr, is, m_Ready))
 		{
-			LogUtil::LogMessage(LL_Info, m_ConnectionPtr->GetPlayerName() + " is ready: " + to_string(m_Ready));
+			INFO("%s is ready: %d", m_ConnectionPtr->GetPlayerName().c_str(), m_Ready);
 
 			if (m_Ready)
 			{

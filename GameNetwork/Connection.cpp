@@ -97,9 +97,7 @@ bool Connection::ProcessSequence(InputBitStream& is)
 	SequenceNumber seq;
 	is.Read(seq);
 
-	char info[256];
-	sprintf_s(info, "Received seq: (%d), Expecting: (%d)", seq, m_NextExpectedSequence);
-	LogUtil::LogMessage(LL_Debug, string(info));
+	DEBUG("Received seq: (%d), Expecting: (%d)", seq, m_NextExpectedSequence);
 
 	if (seq == m_NextExpectedSequence)
 	{
@@ -144,9 +142,7 @@ void Connection::ProcessAcks(InputBitStream& is)
 		uint32_t ackEnd = ackStart + ackRange.GetCount();
 		vector<InFlightPacket> packetsToAdd;
 
-		char info[256];
-		sprintf_s(info, "Receive Acks: start(%d), end(%d)", ackStart, ackEnd);
-		LogUtil::LogMessage(LL_Debug, string(info));
+		DEBUG("Receive Acks: start(%d), end(%d)", ackStart, ackEnd);
 
 		// handle the sequence number equal or smaller than the first packet in the queue;
 		while (ackStart < ackEnd && !m_InFlightPackets.empty())
@@ -225,13 +221,10 @@ void Connection::ShowDeliveryStats()
 
 	if (time > m_LastShowStatsTime + cShowStatsTimeout)
 	{
-		char stats[256];
-		sprintf_s(stats, "Stats for [%6s]: heartbeat[%4d], resent rate[%6.2f%s], dispatched[%4d], acked[%4d], resent[%4d]", 
+		INFO("Stats for [%6s]: heartbeat[%4d], resent rate[%6.2f%s], dispatched[%4d], acked[%4d], resent[%4d]", 
 			m_PlayerName.c_str(), m_Heartbeat,
 			static_cast<float>(m_ResentPackets) / m_DispatchedPackets * 100.f, "%",
 			m_DispatchedPackets, m_AckedPackets, m_ResentPackets);
-
-		LogUtil::LogMessage(LL_Info, string(stats));
 
 		m_LastShowStatsTime = time;
 	}
@@ -274,16 +267,14 @@ void Connection::ShowDroppedPacket(InputBitStream& is) const
 		msg += string(info);
 	}
 
-	LogUtil::LogMessage(LL_Debug, msg);
+	DEBUG(msg.c_str());
 }
 
 
 // simply resend the packet if the packet is dropped;
 void Connection::onDelivery(int key, bool bSuccessful)
 {
-	char info[64];
-	sprintf_s(info, "Delivery: seq(%d), success(%d)", key, bSuccessful);
-	LogUtil::LogMessage(LL_Debug, string(info));
+	DEBUG("Delivery: seq(%d), success(%d)", key, bSuccessful);
 
 	if (bSuccessful)
 		++m_AckedPackets;
@@ -295,9 +286,7 @@ void Connection::onDelivery(int key, bool bSuccessful)
 	{
 		if (!bSuccessful)
 		{
-			char msg[256];
-			sprintf_s(msg, "Resending packet: %d", key);
-			LogUtil::LogMessage(LL_Debug, string(msg));
+			DEBUG("Resending packet: %d", key);
 
 			auto& os = pair->second;
 			SendPacket(os);

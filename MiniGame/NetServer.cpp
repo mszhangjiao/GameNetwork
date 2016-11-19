@@ -58,7 +58,7 @@ void NetServer::HandlePacketFromNewClient(InputBitStream& is, const SockAddrIn& 
 
 		HelloMsg::Read(is, name);
 
-		LogUtil::LogMessage(LL_Info, string("Received HELLO from ") + name);
+		INFO("Received HELLO from %s", name.c_str());
 
 		ConnectionPtr newConnPtr = make_shared<Connection>(addr, name, m_NewPlayerId++);
 		ClientProxyPtr newClientPtr = make_shared<ClientProxy>(newConnPtr);
@@ -106,9 +106,7 @@ void NetServer::CheckForDisconnects()
 
 		if (clientPtr->GetReady() && clientPtr->GetConnection()->GetLastReceivedPacketTime() < TimeUtil::Instance().GetTimef() - cDisconnectTimeoutValue)
 		{
-			char info[64];
-			sprintf_s(info, "Disconnected: player id[%d], player name[%s]", clientPtr->GetConnection()->GetPlayerId(), clientPtr->GetConnection()->GetPlayerName().c_str());
-			LogUtil::LogMessage(LL_Info, info);
+			INFO("Disconnected: player id[%d], player name[%s]", clientPtr->GetConnection()->GetPlayerId(), clientPtr->GetConnection()->GetPlayerName().c_str());
 
 			m_IdToClientMap.erase(pair.first);
 			break;

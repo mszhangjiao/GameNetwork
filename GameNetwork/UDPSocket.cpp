@@ -9,20 +9,16 @@ int UDPSocket::Bind(const char* host, const char* service)
 	// Associate a local address with the socket but let provider assign a port number
 	if (sockAddr.CreateFrom(host, service, m_Family) == false)
 	{
-		string msg = "Failed in bind: not able to create SockAddrIn";
 		int error = GetLastError();
-
-		LogUtil::LogMessage(LL_Fatal, error, msg);
+		FATAL("%d, Failed in bind: not able to create SockAddrIn", error);
 		return error;
 	}
 
 	int result = bind(m_Socket, sockAddr, sizeof(sockaddr_storage));
 	if (result != 0)
 	{
-		string msg = "Failed to bind addr";
 		int error = GetLastError();
-
-		LogUtil::LogMessage(LL_Fatal, error, msg);
+		FATAL("%d, Failed to bind addr", error);
 		return error;
 	}
 	else
@@ -43,10 +39,8 @@ int UDPSocket::SetNonBlockingMode(bool bNonBlock)
 
 	if (result == SOCKET_ERROR)
 	{
-		string msg = "Failed to set non-block socket";
 		int error = GetLastError();
-
-		LogUtil::LogMessage(LL_Fatal, error, msg);
+		FATAL("%d, Failed to set non-block socket", error);
 		return error;
 	}
 	else

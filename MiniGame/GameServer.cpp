@@ -6,7 +6,7 @@ bool GameServer::StaticInit()
 	if (server->InitNetManager())
 	{
 		s_Instance.reset(server);
-		LogUtil::LogMessage(LL_Info, "Server is ready, waiting for players to join...");
+		INFO("Server is ready, waiting for players to join...");
 		return true;
 	}
 

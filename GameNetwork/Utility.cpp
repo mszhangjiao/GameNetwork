@@ -34,16 +34,14 @@ UDPSocketPtr SockUtil::CreateUDPSocket(int family)
 	}
 	else
 	{
-		string msg = "Failed to create UDP socket";
 		int error = GetLastError();
-
-		LogUtil::LogMessage(LL_Fatal, error, msg);
+		FATAL("%d, Failed to create UDP socket", error);
 
 		return nullptr;
 	}
 }
 
-string LogUtil::GetLevelString(LogLevel level)
+const char* StringUtil::GetLevelString(LogLevel level)
 {
 	switch (level)
 	{
@@ -58,40 +56,23 @@ string LogUtil::GetLevelString(LogLevel level)
 	case LL_Fatal:
 		return "FATAL";
 	default:
-		return "NOT DEFINED";
+		return "UNKNOWN";
 	}
 }
 
-void LogUtil::LogMessage(LogLevel level, string s)
+void StringUtil::Log(LogLevel level, const char* format, ...)
 {
-	char info[16];
-	sprintf_s(info, "%6.2f: ", TimeUtil::Instance().GetTimef());
+	char info[4096];
+
+	sprintf_s(info, "%6.2f %s: ", TimeUtil::Instance().GetTimef(), GetLevelString(level));
 
 	string msg(info);
 
-	msg += GetLevelString(level);
-	msg += ": ";
-	msg += (s);
-	msg += "\n";
+	va_list args;
+	va_start(args, format);
+	vsnprintf_s(info, 4096, format, args);
 
-	OutputDebugStringA(msg.c_str());
-	
-	if (level != LL_Debug)
-		cout << msg;
-}
-
-void LogUtil::LogMessage(LogLevel level, int errorCode, string s)
-{
-	char info[16];
-	sprintf_s(info, "%6.2f: ", TimeUtil::Instance().GetTimef());
-
-	string msg(info);
-	
-	msg += GetLevelString(level);
-	msg += ": ";
-	msg += to_string(errorCode);
-	msg += ", ";
-	msg += (s);
+	msg += info;
 	msg += "\n";
 
 	OutputDebugStringA(msg.c_str());

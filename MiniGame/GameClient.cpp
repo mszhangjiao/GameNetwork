@@ -6,9 +6,7 @@ bool GameClient::StaticInit(const string& serverIP, const string& playerName)
 	if (client->InitNetManager())
 	{
 		s_Instance.reset(client);
-		char info[64];
-		sprintf_s(info, "Client %s is ready, connecting to server %s ...", playerName.c_str(), serverIP.c_str());
-		LogUtil::LogMessage(LL_Info, info);
+		INFO("Client %s is ready, connecting to server %s ...", playerName.c_str(), serverIP.c_str());
 		return true;
 	}
 

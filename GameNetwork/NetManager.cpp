@@ -88,13 +88,10 @@ void NetManager::ReadIncomingPackets()
 
 		++m_ReceivedNum;
 
-		char info[256];
-		sprintf_s(info, "Whether to drop[%d], drop rate[%6.2f%s], drop chance[%6.2f], total[%d], dropped[%d]", 
+		DEBUG("Whether to drop[%d], drop rate[%6.2f%s], drop chance[%6.2f], total[%d], dropped[%d]", 
 			(randf < m_DropPacketChance), static_cast<float>(m_DroppedNum) / m_ReceivedNum * 100.f, "%",
 			m_DropPacketChance, m_ReceivedNum, m_DroppedNum
 			);
-
-		LogUtil::LogMessage(LL_Debug, info);
 	}
 }
 
