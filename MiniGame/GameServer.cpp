@@ -14,15 +14,16 @@ bool GameServer::StaticInit()
 }
 
 GameServer::GameServer()
+	: m_MinPlayerNumber(2)
+	, m_MaxPlayerNumber(4)
 {
 }
 
 bool GameServer::InitNetManager()
 {
-	return NetServer::StaticInit(m_Service, m_NetFamily);
+	return NetServer::StaticInit(m_Service, m_NetFamily, true);
 }
 
-// run each frame;
 void GameServer::DoFrame()
 {
 	NetServer::Instance()->ProcessIncomingPackets();
@@ -31,7 +32,6 @@ void GameServer::DoFrame()
 	NetServer::Instance()->CheckForDisconnects();
 }
 
-// run one time;
 int GameServer::Run()
 {
 	// init game logic here;

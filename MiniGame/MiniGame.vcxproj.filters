@@ -30,19 +30,10 @@
     <ClInclude Include="GameServer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="Game.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="NetServer.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
-    <ClInclude Include="NetClient.h">
-      <Filter>Header Files</Filter>
-    </ClInclude>
     <ClInclude Include="CardDeck.h">
       <Filter>Header Files</Filter>
     </ClInclude>
-    <ClInclude Include="ClientProxy.h">
+    <ClInclude Include="MiniGame.h">
       <Filter>Header Files</Filter>
     </ClInclude>
   </ItemGroup>
@@ -57,15 +48,6 @@
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="GameClient.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="Game.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="NetServer.cpp">
-      <Filter>Source Files</Filter>
-    </ClCompile>
-    <ClCompile Include="NetClient.cpp">
       <Filter>Source Files</Filter>
     </ClCompile>
     <ClCompile Include="UnitTests.cpp">

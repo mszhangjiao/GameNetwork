@@ -1,13 +1,5 @@
 #pragma once
 
-enum NetClientState
-{
-	Net_None,
-	Net_Hello,
-	Net_Welcomed,
-	Net_Disconnected,
-};
-
 // defines the client networking features:
 // - set up connection with server, 
 // - maintains client network states;
@@ -29,14 +21,9 @@ public:
 		return false;
 	}
 
-	NetClientState GetClientState()
+	NetPlayerPtr GetLocalPlayerPtr() const
 	{
-		return m_NetState;
-	}
-
-	bool IsClientDisconnected()
-	{
-		return m_NetState == Net_Disconnected;
+		return m_LocalPlayerPtr;
 	}
 
 	virtual void ProcessPacket(InputBitStream& is, const SockAddrIn& addr) override;
@@ -63,11 +50,9 @@ private:
 	void UpdateSendingHello();
 	void UpdateSendingInput();	
 
-	SockAddrIn m_ServerSockAddr;
 	string m_ServerIP;
-	string m_PlayerName;
-	NetClientState m_NetState;
-	float m_TimeOfLastHello;
+	SockAddrIn m_ServerSockAddr;
+	NetPlayerPtr m_LocalPlayerPtr;
 
-	ConnectionPtr m_ServerConnectionPtr;
+	float m_TimeOfLastHello;
 };

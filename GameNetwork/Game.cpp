@@ -3,9 +3,7 @@
 GamePtr Game::s_Instance = nullptr;
 
 Game::Game()
-	: m_Service(cMiniGameSockPort)
-	, m_NetFamily(cNetFamily)
-	, m_IsRunning(true)
+	: m_IsRunning(true)
 {
 	SockUtil::StaticInit();
 }

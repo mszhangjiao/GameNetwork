@@ -3,11 +3,11 @@
 NetClient::NetClient(const string& serverIP, const string& service, int family, const string& playerName)
 	: NetManager(service, family)
 	, m_ServerIP(serverIP)
-	, m_PlayerName(playerName)
-	, m_ServerConnectionPtr(nullptr)
 {
 	SetDropPacketChance(0.1f);
 	SetSimulatedLatency(0.1f);
+
+	m_LocalPlayerPtr = make_shared<NetPlayer>(playerName);
 }
 
 bool NetClient::StaticInit(const string& serverIP, const string& service, int family, const string& playerName)
@@ -26,8 +26,10 @@ bool NetClient::Init()
 
 	if (result)
 	{
-		m_ServerConnectionPtr.reset(new Connection(m_ServerSockAddr, m_PlayerName, 0));
-		m_NetState = Net_Hello;
+		ConnectionPtr connPtr = make_shared<Connection>(m_ServerSockAddr);
+		m_LocalPlayerPtr->SetConnection(connPtr);
+
+		m_LocalPlayerPtr->SetState(Net_Hello);
 		m_TimeOfLastHello = 0.f;
 	}
 
@@ -39,45 +41,45 @@ void NetClient::ShutdownAndClose()
 	NetManager::ShutdownAndClose();
 
 	m_ServerSockAddr = SockAddrIn::NullAddr;
-	m_ServerConnectionPtr = nullptr;
+	m_LocalPlayerPtr->SetConnection(nullptr);
 }
 
 
 void NetClient::ProcessPacket(InputBitStream& is, const SockAddrIn& addr)
 {
 	// ignore msgs from unknown hosts;
-	if (addr != m_ServerConnectionPtr->GetRemoteAddr())
+	if (addr != m_LocalPlayerPtr->GetConnection()->GetRemoteAddr())
 	{
 		return;
 	}
 
-	m_ServerConnectionPtr->SetLastReceivedPacketTime(TimeUtil::Instance().GetTimef());
+	m_LocalPlayerPtr->GetConnection()->SetLastReceivedPacketTime(TimeUtil::Instance().GetTimef());
 
 	uint8_t msgType;
 	is.Read(msgType);
 
 	switch (msgType)
 	{
-	case Msg_Welcome:
-		if (m_NetState == Net_Hello)
+	case Msg_Net_Welcome:
+		if (m_LocalPlayerPtr->GetState() == Net_Hello)
 		{
 			HandleWelcomePacket(is);
 		}
 		break;
 
-	case Msg_Heartbeat:
-		if (m_NetState == Net_Welcomed)
+	case Msg_Net_Heartbeat:
+		if (m_LocalPlayerPtr->GetState() == Net_Connected)
 		{
 			uint32_t heartbeat;
-			if (HeartbeatMsg::Receive(*m_ServerConnectionPtr, is, heartbeat))
+			if (HeartbeatMsg::Receive(*m_LocalPlayerPtr->GetConnection(), is, heartbeat))
 			{
 				INFO("Server heartbeat: [%4d]", heartbeat);
 			}
 		}
 		break;
 
-	case Msg_Ack:
-		AckMsg::Receive(*m_ServerConnectionPtr, is);
+	case Msg_Net_Ack:
+		AckMsg::Receive(*m_LocalPlayerPtr->GetConnection(), is);
 	}
 }
 
@@ -88,17 +90,17 @@ void NetClient::HandleConnectionError(const SockAddrIn& sockAddr)
 
 void NetClient::SendOutgoingPackets()
 {
-	switch (m_NetState)
+	switch (m_LocalPlayerPtr->GetState())
 	{
 	case Net_Hello:
 		UpdateSendingHello();
 		break;
 
-	case Net_Welcomed:
+	case Net_Connected:
 		UpdateSendingInput();
 		// don't resend message if the recipiant doesn't respond, it may be just disconnected...
-		m_ServerConnectionPtr->ProcessTimedOutPackets();
-		m_ServerConnectionPtr->ProcessTimedoutAcks();
+		m_LocalPlayerPtr->GetConnection()->ProcessTimedOutPackets();
+		m_LocalPlayerPtr->GetConnection()->ProcessTimedoutAcks();
 		break;
 	}
 }
@@ -106,32 +108,29 @@ void NetClient::SendOutgoingPackets()
 // shutdown the network with 
 void NetClient::CheckForDisconnects()
 {	
-	if (m_NetState == Net_Welcomed && m_ServerConnectionPtr->GetLastReceivedPacketTime() < TimeUtil::Instance().GetTimef() - cDisconnectTimeoutValue)
+	if (m_LocalPlayerPtr->GetState() == Net_Connected && m_LocalPlayerPtr->GetConnection()->GetLastReceivedPacketTime() < TimeUtil::Instance().GetTimef() - cDisconnectTimeoutValue)
 	{
-		INFO("Disconnected: player id[%d], player name[%s]", m_ServerConnectionPtr->GetPlayerId(), m_ServerConnectionPtr->GetPlayerName().c_str());
+		INFO("Disconnected: player id[%d], player name[%s]", m_LocalPlayerPtr->GetPlayerId(), m_LocalPlayerPtr->GetPlayerName().c_str());
 
 		ShutdownAndClose();
-		m_NetState = Net_Disconnected;
+		m_LocalPlayerPtr->SetState(Net_Disconnected);
 	}
 }
 
 void NetClient::SendHelloPacket()
 {
-	//m_ServerConnectionPtr->SendHelloMsg(m_PlayerName);
-	HelloMsg::Send(*m_ServerConnectionPtr, m_PlayerName);
+	HelloMsg::Send(*m_LocalPlayerPtr->GetConnection(), m_LocalPlayerPtr->GetPlayerName());
 }
 
 void NetClient::HandleWelcomePacket(InputBitStream& is)
 {
 	int8_t playerId;
-	if (WelcomeMsg::Receive(*m_ServerConnectionPtr, is, playerId))
+	if (WelcomeMsg::Receive(*m_LocalPlayerPtr->GetConnection(), is, playerId))
 	{
-		m_ServerConnectionPtr->SetPlayerId(playerId);
-		m_NetState = Net_Welcomed;
+		m_LocalPlayerPtr->SetPlayerId(playerId);
+		m_LocalPlayerPtr->SetState(Net_Connected);
 
 		INFO("Welcomed by the server, playerId: %d", playerId);
-
-		ReadyMsg::Send(*m_ServerConnectionPtr, true);
 	}
 }
 
@@ -147,7 +146,7 @@ void NetClient::UpdateSendingHello()
 
 void NetClient::ShowDroppedPacket(InputBitStream& is, const SockAddrIn& addr)
 {
-	m_ServerConnectionPtr->ShowDroppedPacket(is);
+	m_LocalPlayerPtr->GetConnection()->ShowDroppedPacket(is);
 }
 
 // To-do...

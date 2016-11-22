@@ -28,7 +28,7 @@ void GameClient::DoFrame()
 {
 	NetClient::Instance()->CheckForDisconnects();
 	
-	if (!NetClient::Instance()->IsClientDisconnected())
+	if (!NetClient::Instance()->GetLocalPlayerPtr()->IsClientDisconnected())
 	{
 		NetClient::Instance()->ProcessIncomingPackets();
 		NetClient::Instance()->SendOutgoingPackets();

@@ -13,12 +13,9 @@
 #include "..\GameNetwork\SharedHeader.h"
 
 #include "CardDeck.h"
-#include "Game.h"
+#include "MiniGame.h"
 #include "GameServer.h"
 #include "GameClient.h"
-#include "ClientProxy.h"
-#include "NetServer.h"
-#include "NetClient.h"
 
 extern void UnitTests();
 

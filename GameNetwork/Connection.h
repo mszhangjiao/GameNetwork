@@ -107,10 +107,8 @@ public:
 	const float cHeartbeatTimeout = 2.f;
 	const SequenceNumber cStartSequenceNumber = 0;
 
-	Connection(const SockAddrIn& remoteAddr, const string& playerName, int playerId)
+	Connection(const SockAddrIn& remoteAddr)
 		: m_RemoteAddr(remoteAddr)
-		, m_PlayerName(playerName)
-		, m_PlayerId(playerId)
 		, m_NextOutgoingSequence(cStartSequenceNumber)
 		, m_NextExpectedSequence(cStartSequenceNumber)
 		, m_DispatchedPackets(0)
@@ -127,21 +125,6 @@ public:
 	const SockAddrIn& GetRemoteAddr() const
 	{
 		return m_RemoteAddr;
-	}
-
-	const string& GetPlayerName() const
-	{
-		return m_PlayerName;
-	}
-
-	uint8_t GetPlayerId() const
-	{
-		return m_PlayerId;
-	}
-
-	void SetPlayerId(int8_t playerId)
-	{
-		m_PlayerId = playerId;
 	}
 
 	void SetLastReceivedPacketTime(float time)
@@ -193,7 +176,7 @@ public:
 	void SendHeartbeat();
 
 	// show info and stats;
-	void ShowDeliveryStats();
+	void ShowDeliveryStats(const string& name);
 	void ShowDroppedPacket(InputBitStream& is) const;
 
 private:
@@ -205,8 +188,6 @@ private:
 
 	// basic connection info
 	SockAddrIn m_RemoteAddr;
-	string m_PlayerName;
-	uint8_t m_PlayerId;
 
 	// for reliability
 	typedef map<SequenceNumber, OutputBitStream> SeqToOutputBitStreamMap;

@@ -132,8 +132,13 @@
   <ItemGroup>
     <ClInclude Include="BitStream.h" />
     <ClInclude Include="Connection.h" />
+    <ClInclude Include="Game.h" />
+    <ClInclude Include="Match.h" />
     <ClInclude Include="Message.h" />
+    <ClInclude Include="NetClient.h" />
     <ClInclude Include="NetManager.h" />
+    <ClInclude Include="NetPlayer.h" />
+    <ClInclude Include="NetServer.h" />
     <ClInclude Include="SharedHeader.h" />
     <ClInclude Include="SockAddrIn.h" />
     <ClInclude Include="Utility.h" />
@@ -143,8 +148,11 @@
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="BitStream.cpp" />
+    <ClCompile Include="Game.cpp" />
+    <ClCompile Include="NetClient.cpp" />
     <ClCompile Include="NetManager.cpp" />
     <ClCompile Include="Connection.cpp" />
+    <ClCompile Include="NetServer.cpp" />
     <ClCompile Include="SockAddrIn.cpp" />
     <ClCompile Include="Utility.cpp" />
     <ClCompile Include="stdafx.cpp">

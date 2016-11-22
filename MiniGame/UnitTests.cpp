@@ -41,9 +41,9 @@ void testMessage()
 	uint8_t type;
 	is.Read(type);
 
-	switch (static_cast<MsgType>(type))
+	switch (static_cast<MsgNetType>(type))
 	{
-		case Msg_Hello:
+		case Msg_Net_Hello:
 		{
 			string name;
 			HelloMsg::Read(is, name);
@@ -51,7 +51,7 @@ void testMessage()
 		}
 			break;
 
-		case Msg_Welcome:
+		case Msg_Net_Welcome:
 		{
 			int8_t playerID;
 			WelcomeMsg::Read(is, playerID);

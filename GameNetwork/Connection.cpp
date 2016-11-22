@@ -215,14 +215,14 @@ void Connection::ProcessTimedoutAcks()
 	}
 }
 
-void Connection::ShowDeliveryStats()
+void Connection::ShowDeliveryStats(const string& name)
 {
 	float time = TimeUtil::Instance().GetTimef();
 
 	if (time > m_LastShowStatsTime + cShowStatsTimeout)
 	{
 		INFO("Stats for [%6s]: heartbeat[%4d], resent rate[%6.2f%s], dispatched[%4d], acked[%4d], resent[%4d]", 
-			m_PlayerName.c_str(), m_Heartbeat,
+			name.c_str(), m_Heartbeat,
 			static_cast<float>(m_ResentPackets) / m_DispatchedPackets * 100.f, "%",
 			m_DispatchedPackets, m_AckedPackets, m_ResentPackets);
 

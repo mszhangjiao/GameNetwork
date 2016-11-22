@@ -7,7 +7,7 @@
 class NetServer : public NetManager
 {
 public:
-	static bool StaticInit(const string& service, int family);
+	static bool StaticInit(const string& service, int family, bool enableHeartbeat);
 	
 	static NetServer* Instance()
 	{
@@ -24,21 +24,22 @@ public:
 
 	void SendOutgoingPackets();
 	void HandlePacketFromNewClient(InputBitStream& is, const SockAddrIn& addr);
-	void ProcessPacket(ClientProxyPtr clientPtr, InputBitStream& is);
+	void ProcessPacket(NetPlayerPtr playerPtr, InputBitStream& is);
 
 	virtual void ShowDroppedPacket(InputBitStream& is, const SockAddrIn& addr) override;
 	void CheckForDisconnects();
 
 private:
-	NetServer(const string& service, int family);
+	NetServer(const string& service, int family, bool enableHeartbeat = false);
 
-	void SendWelcomePacket(ClientProxyPtr clientPtr);
+	void SendWelcomePacket(NetPlayerPtr playerPtr);
 
-	typedef unordered_map<int, ClientProxyPtr> IdToClientMap;
-	typedef unordered_map<SockAddrIn, ClientProxyPtr> AddrToClientMap;
+	typedef unordered_map<int, NetPlayerPtr> IdToPlayerMap;
+	typedef unordered_map<SockAddrIn, NetPlayerPtr> AddrToPlayerMap;
 
-	AddrToClientMap m_AddrToClientMap;
-	IdToClientMap m_IdToClientMap;
+	AddrToPlayerMap m_AddrToPlayerMap;
+	IdToPlayerMap m_IdToPlayerMap;
 
 	uint8_t m_NewPlayerId;
+	bool m_SendHeartbeats;
 };

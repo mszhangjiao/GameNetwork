@@ -48,5 +48,10 @@ using std::iostream;
 #include "NetManager.h"
 #include "Message.h"
 #include "Connection.h"
+#include "NetPlayer.h"
+#include "Match.h"
+#include "Game.h"
+#include "NetServer.h"
+#include "NetClient.h"
 
 #define HOSTNAME_SIZE	MAX_PATH

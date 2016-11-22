@@ -4,10 +4,6 @@
 class Game
 {
 public:
-	// To simplify the commandline, use static port number and network family;
-	const char* cMiniGameSockPort = "50001";
-	const int cNetFamily = AF_INET;
-
 	static shared_ptr<Game> Instance()
 	{
 		return s_Instance;
@@ -23,6 +19,17 @@ public:
 
 protected:
 	Game();
+	
+	void SetService(const string& service)
+	{
+		m_Service = service;
+	}
+
+	void SetFamily(int family)
+	{
+		m_NetFamily = family;
+	}
+
 	virtual void DoFrame();
 
 	string m_Service;
@@ -32,6 +39,7 @@ protected:
 
 private:
 	bool m_IsRunning;
+	Match m_Match;
 };
 
 typedef shared_ptr<Game> GamePtr;

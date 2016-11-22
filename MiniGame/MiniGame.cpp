@@ -3,17 +3,6 @@
 
 #include "stdafx.h"
 
-#include <iostream>
-#include <string>
-#include <cstdint>
-#include <vector>
-
-#include "GameClient.h"
-#include "GameServer.h"
-#include "..\GameNetwork\BitStream.h"
-
-using namespace std;
-
 void PrintUsage()
 {
 	cout << "Usage: " << endl;
