@@ -35,7 +35,7 @@ void testMessage()
 	HelloMsg::Write(os, string("Nancy"));
 
 	OutputBitStream os2;
-	WelcomeMsg::Write(os2, static_cast<uint8_t>(1));
+	WelcomeMsg::Write(os2, static_cast<PlayerId>(1));
 
 	InputBitStream is(os.GetBuffer(), os.GetBitLength());
 	uint8_t type;
@@ -53,7 +53,7 @@ void testMessage()
 
 		case Msg_Net_Welcome:
 		{
-			int8_t playerID;
+			PlayerId playerID;
 			WelcomeMsg::Read(is, playerID);
 			cout << "Welcome " << ", playerID: " << static_cast<int>(playerID) << endl;
 		}

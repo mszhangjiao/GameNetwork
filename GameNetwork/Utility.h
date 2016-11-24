@@ -11,7 +11,8 @@ public:
 
 enum LogLevel
 {
-	LL_Debug = 0,
+	LL_Verbose = 0,
+	LL_Debug,
 	LL_Info,
 	LL_Warning,
 	LL_Error,
@@ -22,15 +23,24 @@ class StringUtil
 {
 public:
 	static const char* GetLevelString(LogLevel level);
+	static string Format(const char* format, ...);
 
 	static void Log(LogLevel level, const char* format, ...);
+
+	static void SetShowLogLevel(LogLevel level)
+	{
+		sShowLogLevel = level;
+	}
+private:
+	static LogLevel sShowLogLevel;
 };
 
-#define DEBUG(...) StringUtil::Log(LL_Debug, __VA_ARGS__);
-#define INFO(...) StringUtil::Log(LL_Info, __VA_ARGS__);
-#define WARN(...) StringUtil::Log(LL_Warning, __VA_ARGS__);
-#define ERR(...) StringUtil::Log(LL_Error, __VA_ARGS__);
 #define FATAL(...) StringUtil::Log(LL_Fatal, __VA_ARGS__);
+#define ERR(...) StringUtil::Log(LL_Error, __VA_ARGS__);
+#define WARN(...) StringUtil::Log(LL_Warning, __VA_ARGS__);
+#define INFO(...) StringUtil::Log(LL_Info, __VA_ARGS__);
+#define DEBUG(...) StringUtil::Log(LL_Debug, __VA_ARGS__);
+#define VERBO(...) StringUtil::Log(LL_Verbose, __VA_ARGS__);
 
 // random float number function is provided
 class MathUtil

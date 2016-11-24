@@ -41,10 +41,14 @@ UDPSocketPtr SockUtil::CreateUDPSocket(int family)
 	}
 }
 
+LogLevel StringUtil::sShowLogLevel = LL_Info;
+
 const char* StringUtil::GetLevelString(LogLevel level)
 {
 	switch (level)
 	{
+	case LL_Verbose:
+		return "VERBOSE";
 	case LL_Debug:
 		return "DEBUG";
 	case LL_Info:
@@ -71,15 +75,29 @@ void StringUtil::Log(LogLevel level, const char* format, ...)
 	va_list args;
 	va_start(args, format);
 	vsnprintf_s(info, 4096, format, args);
+	va_end(args);
 
 	msg += info;
 	msg += "\n";
 
 	OutputDebugStringA(msg.c_str());
 
-	if (level != LL_Debug)
+	if (level >= sShowLogLevel)
 		cout << msg;
 }
+
+string StringUtil::Format(const char* format, ...)
+{
+	char info[4096];
+
+	va_list args;
+	va_start(args, format);
+	vsnprintf_s(info, 4096, format, args);
+	va_end(args);
+
+	return string(info);
+}
+
 
 TimeUtil TimeUtil::s_Instance;
 LARGE_INTEGER TimeUtil::s_StartTime = { 0 };

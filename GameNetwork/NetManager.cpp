@@ -42,6 +42,7 @@ void NetManager::SendPacket(const OutputBitStream& os, const SockAddrIn& addr)
 	int sentByte = m_UDPSockPtr->SendTo(os.GetBuffer(), os.GetByteLength(), addr);
 }
 
+// todo: how to read multiple packets per frame?
 void NetManager::ReadIncomingPackets()
 {
 	char buffer[cPacketBufferSize];
@@ -49,7 +50,7 @@ void NetManager::ReadIncomingPackets()
 	SockAddrIn sockAddr;
 
 	int receivedPackets = 0;
-	int totalReadBytes = 0;
+	//int totalReadBytes = 0;
 
 	while (receivedPackets++ < cMaxPacketsPerFrame)
 	{
@@ -88,7 +89,7 @@ void NetManager::ReadIncomingPackets()
 
 		++m_ReceivedNum;
 
-		DEBUG("Whether to drop[%d], drop rate[%6.2f%s], drop chance[%6.2f], total[%d], dropped[%d]", 
+		VERBO("Whether to drop[%d], drop rate[%6.2f%s], drop chance[%6.2f], total[%d], dropped[%d]",
 			(randf < m_DropPacketChance), static_cast<float>(m_DroppedNum) / m_ReceivedNum * 100.f, "%",
 			m_DropPacketChance, m_ReceivedNum, m_DroppedNum
 			);

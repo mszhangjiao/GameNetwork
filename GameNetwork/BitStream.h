@@ -226,7 +226,7 @@ public:
 
 	// variadic read function
 	template <typename T, typename ...Types>
-	void Read(const T& firstArg, const Types& ...args)
+	void Read(T& firstArg, Types& ...args)
 	{
 		Read(firstArg);
 		Read(args...);

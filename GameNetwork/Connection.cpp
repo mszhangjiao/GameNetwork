@@ -97,7 +97,7 @@ bool Connection::ProcessSequence(InputBitStream& is)
 	SequenceNumber seq;
 	is.Read(seq);
 
-	DEBUG("Received seq: (%d), Expecting: (%d)", seq, m_NextExpectedSequence);
+	DEBUG("%s: connection port [%5d], Received seq: (%d), Expecting: (%d)", __FUNCTION__, m_RemoteAddr.GetPort(), seq, m_NextExpectedSequence);
 
 	if (seq == m_NextExpectedSequence)
 	{
@@ -221,7 +221,7 @@ void Connection::ShowDeliveryStats(const string& name)
 
 	if (time > m_LastShowStatsTime + cShowStatsTimeout)
 	{
-		INFO("Stats for [%6s]: heartbeat[%4d], resent rate[%6.2f%s], dispatched[%4d], acked[%4d], resent[%4d]", 
+		DEBUG("Stats for [%6s]: heartbeat[%4d], resent rate[%6.2f%s], dispatched[%4d], acked[%4d], resent[%4d]", 
 			name.c_str(), m_Heartbeat,
 			static_cast<float>(m_ResentPackets) / m_DispatchedPackets * 100.f, "%",
 			m_DispatchedPackets, m_AckedPackets, m_ResentPackets);
@@ -274,7 +274,7 @@ void Connection::ShowDroppedPacket(InputBitStream& is) const
 // simply resend the packet if the packet is dropped;
 void Connection::onDelivery(int key, bool bSuccessful)
 {
-	DEBUG("Delivery: seq(%d), success(%d)", key, bSuccessful);
+	VERBO("Delivery: seq(%d), success(%d)", key, bSuccessful);
 
 	if (bSuccessful)
 		++m_AckedPackets;
@@ -286,7 +286,7 @@ void Connection::onDelivery(int key, bool bSuccessful)
 	{
 		if (!bSuccessful)
 		{
-			DEBUG("Resending packet: %d", key);
+			VERBO("Resending packet: %d", key);
 
 			auto& os = pair->second;
 			SendPacket(os);

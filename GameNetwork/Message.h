@@ -12,6 +12,10 @@ class Connection;
 // Reliable: bool [+ SequenceNumber]
 // HasAck: bool [+ AckRange]
 // Message data: variadic...
+
+// IMPORTANT NOTE!!!
+// we must check the return value from Msg::Receive(), otherwise, we may get undefined data;
+
 template<uint8_t MessageType, bool Reliable, typename ...Types>
 class Message
 {
@@ -34,6 +38,8 @@ public:
 		conn.SendPacket(os);
 	}
 
+	// NOTE!!! 
+	// the data is only read when receive returns true;
 	static bool Receive(Connection& conn, InputBitStream& is, Types& ...args)
 	{
 		static_assert(MessageType < 256, "Control channel message must be a byte.");
@@ -76,7 +82,7 @@ public:
 enum MsgTypeStart
 {
 	Msg_Net_Start = 0,
-	Msg_Game_Start = 128,
+	Msg_Match_Start = 128,
 };
 
 // message types in Networking layer
@@ -90,32 +96,21 @@ enum MsgNetType
 	Msg_Net_Max,
 };
 
-// message types in game layer
-enum MsgGameType
-{
-	Msg_Game_FindMatch = Msg_Game_Start,
-	Msg_Game_JoinMatch,
-	Msg_Game_StartMatch,
-	Msg_Game_StartTurn,
-	Msg_Game_PlayTurn,
-	Msg_Game_EndMatch,
-	Msg_Game_Max,
-};
-
 // message class definition: how simple it is!
 // params: MesgType, Reliable, variadic...
+
+// IMPORTANT NOTE!!! 
+// we must check the return value from Msg::Receive(), otherwise, we may get undefined data;
+
+// network messages
 
 // string: PlayerName
 typedef Message<Msg_Net_Hello, false, string> HelloMsg;
 
-// int8_t: playerId: we may need to change it to int32_t
-typedef Message<Msg_Net_Welcome, false, int8_t> WelcomeMsg;
-
-// bool: bReady
-typedef Message<Msg_Net_Ready, true, bool> ReadyMsg;
+typedef Message<Msg_Net_Welcome, false, PlayerId> WelcomeMsg;
 
 // uint32_t: heartbeat value
 typedef Message<Msg_Net_Heartbeat, true, uint32_t> HeartbeatMsg;
 
-// no param for ack msg;
+// no param;
 typedef Message<Msg_Net_Ack, false> AckMsg;

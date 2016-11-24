@@ -12,6 +12,8 @@ public:
 	virtual ~Game();
 	virtual int Run();
 
+	virtual void ProcessPacket(uint8_t msgType, NetPlayerPtr playerPtr, InputBitStream& is) = 0;
+
 	void SetGameRunning(bool running)
 	{
 		m_IsRunning = running;
@@ -39,7 +41,6 @@ protected:
 
 private:
 	bool m_IsRunning;
-	Match m_Match;
 };
 
 typedef shared_ptr<Game> GamePtr;
