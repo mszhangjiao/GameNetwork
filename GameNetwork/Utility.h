@@ -17,6 +17,7 @@ enum LogLevel
 	LL_Warning,
 	LL_Error,
 	LL_Fatal,
+	LL_Prompt,
 };
 
 class StringUtil
@@ -47,6 +48,7 @@ private:
 #define INFO(...) StringUtil::Log(LL_Info, __VA_ARGS__);
 #define DEBUG(...) StringUtil::Log(LL_Debug, __VA_ARGS__);
 #define VERBO(...) StringUtil::Log(LL_Verbose, __VA_ARGS__);
+#define PROMPT(...) StringUtil::Log(LL_Prompt, __VA_ARGS__);
 
 // random float number function is provided
 class MathUtil

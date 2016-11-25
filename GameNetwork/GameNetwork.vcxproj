@@ -132,6 +132,7 @@
   <ItemGroup>
     <ClInclude Include="BitStream.h" />
     <ClInclude Include="Connection.h" />
+    <ClInclude Include="CriticalSection.h" />
     <ClInclude Include="Game.h" />
     <ClInclude Include="Match.h" />
     <ClInclude Include="Message.h" />

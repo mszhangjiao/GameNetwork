@@ -1,13 +1,13 @@
 #include "stdafx.h"
 
-bool GameServer::StaticInit()
+bool GameServer::StaticInit(int cardNum, int playerNum)
 {
-	GameServer* server = new GameServer();
+	GameServer* server = new GameServer(cardNum, playerNum);
 	if (server->InitNetManager())
 	{
 		s_Instance.reset(server);
-		NetServer::Instance()->EnableDeliveryStats(false);
-		StringUtil::SetConsoleLogLevel(LL_Debug);
+		NetServer::Instance()->EnableDeliveryStats(true);
+		StringUtil::SetConsoleLogLevel(LL_Info);
 		StringUtil::SetDebugWindowLogLevel(LL_Debug);
 
 		INFO("Server is ready, waiting for players to join...");
@@ -17,16 +17,17 @@ bool GameServer::StaticInit()
 	return false;
 }
 
-GameServer::GameServer()
+GameServer::GameServer(int cardNum, int playerNum)
 	: m_NewMatchId(0)
-	, m_PlayerNumberLimit(CardDeck::cPlayerNumLimit)
+	, m_CardNumber(cardNum)
+	, m_PlayerNumberLimit(playerNum)
 {
 }
 
 bool GameServer::InitNetManager()
 {
 	// enable/disable the server heartbeats and showing delivery stats
-	return NetServer::StaticInit(m_Service, m_NetFamily, true, false);
+	return NetServer::StaticInit(m_Service, m_NetFamily, true, true);
 }
 
 void GameServer::DoFrame()
@@ -288,7 +289,7 @@ void GameServer::UpdateMatches()
 
 void GameServer::StartMatch(MatchPtr matchPtr)
 {
-	DealtCards dealtCards = CardDeck::DealCards();
+	DealtCards dealtCards = CardDeck::DealCards(m_CardNumber, m_PlayerNumberLimit);
 
 	assert(dealtCards.size() == matchPtr->GetPlayerNum());
 	PlayerList players = matchPtr->GetPlayerList();
@@ -357,7 +358,7 @@ void GameServer::UpdateTurn(MatchPtr matchPtr)
 	bool gotPlayedCardForAll = true;
 
 	auto& playedCards = m_MatchIdToPlayedCardsMap[matchId];
-	map<Card, PlayerPtr> sortedPlayerMap;
+	map<Card, PlayerPtr, less<Card>> sortedPlayerMap;
 
 	if (playedCards.size() < num)
 	{
@@ -411,20 +412,14 @@ void GameServer::UpdateTurn(MatchPtr matchPtr)
 
 			if (netPlayerPtr)
 			{
-				// send the result to the players;
-				if (turnId > 0)
-				{
-					INFO("Turn [%2d] result: player [%6s], played card [%2d], turn score [%2d]", turnId, netPlayerPtr->GetName().c_str(), cards[i], turnScores[i]);
-				}
+				// send turn result to the players;
+				INFO("Turn [%2d] result: player [%6s], played card [%2d], turn score [%2d]", turnId, netPlayerPtr->GetName().c_str(), cards[i], turnScores[i]);
+				EndTurnMsg::Send(*netPlayerPtr->GetConnection(), matchId, turnId, playerIds, cards, turnScores);
+				playedCards.clear();
 
-				if (turnId < matchPtr->GetMaxTurnId() - 1)
-				{
-					EndTurnMsg::Send(*netPlayerPtr->GetConnection(), matchId, turnId, playerIds, cards, turnScores);
-					playedCards.clear();
-				}
-				else
-				{
-					
+				// send match result to players;
+				if (turnId == matchPtr->GetMaxTurnId() - 1)
+				{					
 					INFO("Match [%2d] result: player [%6s], total score [%2d]", matchId, matchPtr->GetPlayerById(playerIds[i])->GetName().c_str(), matchScores[i]);
 
 					EndMatchMsg::Send(*netPlayerPtr->GetConnection(), matchId, playerIds, matchScores);

@@ -1,12 +1,18 @@
 #include "stdafx.h"
 
+const char* GameClient::cCommandList[] =
+{
+	"replay",
+	"leave"
+};
+
 bool GameClient::StaticInit(const string& serverIP, const string& playerName)
 {
 	GameClient* client = new GameClient(serverIP, playerName);
 	if (client->InitNetManager())
 	{
 		s_Instance.reset(client);
-		StringUtil::SetConsoleLogLevel(LL_Debug);
+		StringUtil::SetConsoleLogLevel(LL_Info);
 		StringUtil::SetDebugWindowLogLevel(LL_Debug);
 
 		INFO("Client %s is ready, connecting to server %s ...", playerName.c_str(), serverIP.c_str());
@@ -21,6 +27,7 @@ GameClient::GameClient(const string& serverIP, const string& playerName)
 	, m_PlayerName(playerName)
 	, m_CurrentMatchPtr(nullptr)
 {
+	m_Thread = CreateThread(0, 0, (LPTHREAD_START_ROUTINE)GameClient::ConsoleCommandProc, this, 0, 0);
 }
 
 bool GameClient::InitNetManager()
@@ -41,6 +48,8 @@ void GameClient::DoFrame()
 	}
 
 	UpdateLocalPlayer();
+
+	ExecConsoleCommand();
 }
 
 void GameClient::FindMatch()
@@ -55,14 +64,12 @@ void GameClient::PlayTurn(TurnId turnId)
 {
 	NetPlayerPtr playerPtr = NetClient::Instance()->GetLocalPlayerPtr();
 	
-	INFO("%s: turnId[%d]", __FUNCTION__, turnId);
-
-	assert(turnId + m_CardList.size() == m_InitialCardsNum);
-	Card card = m_CardList.back();
-	m_CardList.pop_back();
+	Card card = m_CardList.front();
 	PlayTurnMsg::Send(*playerPtr->GetConnection(), turnId, card);
 
-	INFO("%s: turnId[%d], card[%d]", __FUNCTION__, turnId, card);
+	INFO("%s: turnId[%d], current card list [%s], played card[%d]", __FUNCTION__, turnId, CardsToString().c_str(), card);
+
+	m_CardList.pop_front();
 }
 
 void GameClient::UpdateLocalPlayer()
@@ -247,7 +254,7 @@ void GameClient::HandleStartTurn(InputBitStream& is)
 		return;
 	}
 
-	INFO("%s: turn [%d]", __FUNCTION__, turnId);
+	DEBUG("%s: turn [%d]", __FUNCTION__, turnId);
 
 	PlayTurn(turnId);
 }
@@ -321,7 +328,7 @@ void GameClient::HandleEndMatch(InputBitStream& is)
 		INFO("Match [%2d] result: player [%6s], total score [%2d]", matchId, name.c_str(), scores[i]);
 	}
 
-	PromptToReplay();
+	PromptUser("What do you want next? \"replay\" or \"leave\"");
 }
 
 void GameClient::MatchReady()
@@ -350,20 +357,91 @@ void GameClient::LeaveGame()
 	LeaveGameMsg::Send(*playerPtr->GetConnection());
 }
 
-void GameClient::PromptToReplay()
+void GameClient::PromptUser(const string& message)
 {
-	cout << "Do you want to play again? Y/N" << endl;
+	PROMPT(message.c_str());
+}
 
-	char c;
-	cin >> c;
+void GameClient::PushCommand(const char* command)
+{
+	AutoCriticalSection aSection(&m_CSection);
+	m_Commands.push(command);
+}
 
-	if (c == 'Y' || c == 'y')
+bool GameClient::PopCommand(string& command)
+{
+	AutoCriticalSection aSection(&m_CSection);
+	if (!m_Commands.empty())
+	{
+		command = m_Commands.front();
+		m_Commands.pop();
+		return true;
+	}
+
+	return false;
+}
+
+void GameClient::RunCommand()
+{
+	char command[cCommandLength];
+
+	while (cin.getline(command, cCommandLength))
+	{
+		PushCommand(command);
+		Sleep(500);
+	}
+}
+
+void GameClient::ConsoleCommandProc(GameClient *game)
+{
+	game->RunCommand();
+}
+
+void GameClient::ExecConsoleCommand()
+{
+	struct convert
+	{
+		void operator()(char& c)
+		{
+			c = tolower(c);
+		}
+	};
+
+	string command;
+	for_each(command.begin(), command.end(), convert());
+
+	bool result = PopCommand(command);
+
+	if (!result)
+		return;
+
+	if (command == cCommandList[Com_Replay])
 	{
 		MatchReady();
 	}
-	else
+	else if (command == cCommandList[Com_Leave])
 	{
 		LeaveGame();
 		exit(0);
 	}
+	else
+	{
+		INFO("%s: unknow command [%s], supported commands [%s]", __FUNCTION__, command.c_str(), GetSupportedCommands().c_str());
+	}
+}
+
+string GameClient::GetSupportedCommands() const
+{
+	string s;
+
+	for (auto i = Com_Start + 1; i < Com_End; ++i)
+	{
+		s += cCommandList[i];
+		if (i != Com_End - 1)
+		{
+			s += ", ";
+		}
+	}
+
+	return s;
 }

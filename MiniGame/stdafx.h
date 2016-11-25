@@ -9,6 +9,7 @@
 
 #include <stdio.h>
 #include <tchar.h>
+#include <functional>
 
 #include "..\GameNetwork\SharedHeader.h"
 
@@ -16,7 +17,5 @@
 #include "MiniGame.h"
 #include "GameServer.h"
 #include "GameClient.h"
-
-extern void UnitTests();
 
 // TODO: reference additional headers your program requires here

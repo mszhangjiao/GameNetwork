@@ -107,7 +107,7 @@ bool Connection::ProcessSequence(InputBitStream& is, SequenceNumber& seq)
 		return true;
 	}
 
-	DEBUG("%s: connection port [%5hd], Received seq: (%d), Expecting: (%d)", __FUNCTION__, m_RemoteAddr.GetPort(), seq, m_NextExpectedSequence);
+	DEBUG("%s: connection port [%5hu], Received seq: (%d), Expecting: (%d)", __FUNCTION__, m_RemoteAddr.GetPort(), seq, m_NextExpectedSequence);
 
 	// ack seq will automatically nak the missing packets, 
 	// we also ack the packet with smaller sequence number,

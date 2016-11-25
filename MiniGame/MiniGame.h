@@ -27,7 +27,7 @@ typedef Message<Msg_Match_FindMatch_Reply, true, MatchId> FindMatchReplyMsg;
 // string: player name;
 typedef Message<Msg_Match_JoinMatch, true, MatchId, PlayerId, string> JoinMatchMsg;
 
-typedef Message<Msg_Match_StartMatch, true, MatchId, vector<Card>> StartMatchMsg;
+typedef Message<Msg_Match_StartMatch, true, MatchId, CardList> StartMatchMsg;
 
 typedef Message<Msg_Match_StartTurn, true, MatchId, TurnId> StartTurnMsg;
 
@@ -50,6 +50,7 @@ public:
 	const char* cMiniGameSockPort = "50001";
 	const int cNetFamily = AF_INET;
 
+protected:
 	MiniGame()
 	{
 		SetService(cMiniGameSockPort);

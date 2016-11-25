@@ -141,6 +141,18 @@ public:
 		}
 	}
 
+	// write deque of primitive data types;
+	template <typename T>
+	void Write(const deque<T>& vData)
+	{
+		size_t num = vData.size();
+		Write(num);
+		for (const auto& elem : vData)
+		{
+			Write(elem);
+		}
+	}
+
 	template <typename T, typename ...Types>
 	void Write(const T& firstArg, const Types& ...args)
 	{
@@ -210,6 +222,19 @@ public:
 	// read vector of primitive data types;
 	template <typename T>
 	void Read(vector<T>& vData)
+	{
+		size_t num;
+		Read(num);
+		vData.resize(num);
+		for (T& elem : vData)
+		{
+			Read(elem);
+		}
+	}
+
+	// read deque of primitive data types;
+	template <typename T>
+	void Read(deque<T>& vData)
 	{
 		size_t num;
 		Read(num);

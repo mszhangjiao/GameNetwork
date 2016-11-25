@@ -103,7 +103,7 @@ class Connection : public DeliveryHandler
 {
 public:
 	const float cPacketAckTimeout = 0.4f;
-	const float cShowStatsTimeout = 3.f;
+	const float cShowStatsTimeout = 60.f;
 	const float cHeartbeatTimeout = 2.f;
 	const SequenceNumber cStartSequenceNumber = 0;
 

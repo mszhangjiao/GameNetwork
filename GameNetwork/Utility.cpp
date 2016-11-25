@@ -60,6 +60,8 @@ const char* StringUtil::GetLevelString(LogLevel level)
 		return "ERROR";
 	case LL_Fatal:
 		return "FATAL";
+	case LL_Prompt:
+		return "PROMPT";
 	default:
 		return "UNKNOWN";
 	}

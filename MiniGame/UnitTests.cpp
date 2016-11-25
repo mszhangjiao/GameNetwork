@@ -65,7 +65,19 @@ void testMessage()
 	}
 }
 
+void TestQueue()
+{
+	queue<string> msgQueue;
+
+	if (!msgQueue.empty())
+	{
+		string s = msgQueue.front();
+		msgQueue.pop();
+	}
+}
+
 void UnitTests()
 {
-	testMessage();
+	TestQueue();
+	//testMessage();
 }

@@ -41,6 +41,7 @@ using std::iostream;
 #endif
 
 // Project headers
+#include "CriticalSection.h"
 #include "SockAddrIn.h"
 #include "UDPSocket.h"
 #include "Utility.h"

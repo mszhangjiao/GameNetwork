@@ -3,10 +3,12 @@
 
 #include "stdafx.h"
 
+extern void UnitTests();
+
 void PrintUsage()
 {
 	cout << "Usage: " << endl;
-	cout << "\t" << "To run a game server: MiniGame -s" << endl;
+	cout << "\t" << "To run a game server: MiniGame -s CardNum PlayerNum" << endl;
 	cout << "\t" << "To run a game client: MiniGame -c serverIP playerName" << endl;
 	cout << "\t" << "To run unit test: MiniGame -t" << endl;
 }
@@ -25,7 +27,16 @@ int main(int argc, char* argv[])
 
 	if (mode == "-s")
 	{
-		if (GameServer::StaticInit())
+		if (argc < 4)
+		{
+			PrintUsage();
+			return -4;
+		}
+
+		int cardNum = std::stoi(argv[2]);
+		int playerNum = std::stoi(argv[3]);
+
+		if (GameServer::StaticInit(cardNum, playerNum))
 			return GameServer::Instance()->Run();
 	}
 	else if (mode == "-c")

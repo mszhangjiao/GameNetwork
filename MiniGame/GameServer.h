@@ -5,7 +5,7 @@
 class GameServer : public MiniGame
 {
 public:
-	static bool StaticInit();
+	static bool StaticInit(int cardNum, int playerNum);
 	virtual void ProcessPacket(uint8_t msgType, NetPlayerPtr playerPtr, InputBitStream& is) override;
 
 	void SetGamePlayerNumLimit(int num)
@@ -13,8 +13,23 @@ public:
 		m_PlayerNumberLimit = num;
 	}
 
+	int GetPlayerNumLimit() const
+	{
+		return m_PlayerNumberLimit;
+	}
+
+	void SetCardNumber(int num)
+	{
+		m_CardNumber = num;
+	}
+
+	int GetCardNumber() const
+	{
+		return m_CardNumber;
+	}
+
 private:
-	GameServer();
+	GameServer(int cardNum, int playerNum);
 	bool InitNetManager();
 	MatchPtr FindAvailableMatch() const;
 
@@ -42,6 +57,7 @@ private:
 	void EndMatch(MatchPtr matchPtr);
 
 	MatchId m_NewMatchId;
+	int m_CardNumber;
 	int m_PlayerNumberLimit;
 
 	typedef unordered_map<MatchId, MatchPtr> MatchIdToMatchMap;

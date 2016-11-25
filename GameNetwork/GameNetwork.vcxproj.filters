@@ -63,6 +63,9 @@
     <ClInclude Include="NetServer.h">
       <Filter>Header Files</Filter>
     </ClInclude>
+    <ClInclude Include="CriticalSection.h">
+      <Filter>Header Files</Filter>
+    </ClInclude>
   </ItemGroup>
   <ItemGroup>
     <ClCompile Include="stdafx.cpp">
