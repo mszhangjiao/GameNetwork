@@ -39,7 +39,7 @@ void AckRange::Read(InputBitStream& is)
 // return whether we need to drop this packet;
 // true: keep it
 // false: drop it
-bool Connection::ReadAndProcessReliability(InputBitStream& is)
+bool Connection::ReadAndProcessReliability(InputBitStream& is, SequenceNumber& seq)
 {
 	bool reliable;
 	is.Read(reliable);
@@ -48,7 +48,7 @@ bool Connection::ReadAndProcessReliability(InputBitStream& is)
 
 	if (reliable)
 	{
-		isValid = ProcessSequence(is);
+		isValid = ProcessSequence(is, seq);
 	}
 
 	ProcessAcks(is);
@@ -92,12 +92,11 @@ void Connection::WriteAckData(OutputBitStream& os)
 // return whether we need to drop this packet;
 // true: keep it
 // false: skip it
-bool Connection::ProcessSequence(InputBitStream& is)
+bool Connection::ProcessSequence(InputBitStream& is, SequenceNumber& seq)
 {
-	SequenceNumber seq;
 	is.Read(seq);
 
-	DEBUG("%s: connection port [%5d], Received seq: (%d), Expecting: (%d)", __FUNCTION__, m_RemoteAddr.GetPort(), seq, m_NextExpectedSequence);
+	DEBUG("%s: seq [%d]", __FUNCTION__, seq);
 
 	if (seq == m_NextExpectedSequence)
 	{
@@ -107,6 +106,8 @@ bool Connection::ProcessSequence(InputBitStream& is)
 
 		return true;
 	}
+
+	DEBUG("%s: connection port [%5hd], Received seq: (%d), Expecting: (%d)", __FUNCTION__, m_RemoteAddr.GetPort(), seq, m_NextExpectedSequence);
 
 	// ack seq will automatically nak the missing packets, 
 	// we also ack the packet with smaller sequence number,
@@ -286,7 +287,7 @@ void Connection::onDelivery(int key, bool bSuccessful)
 	{
 		if (!bSuccessful)
 		{
-			VERBO("Resending packet: %d", key);
+			DEBUG("Resending packet: %d", key);
 
 			auto& os = pair->second;
 			SendPacket(os);

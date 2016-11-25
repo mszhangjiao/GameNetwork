@@ -1,8 +1,9 @@
 #include "stdafx.h"
 
-NetClient::NetClient(const string& serverIP, const string& service, int family, const string& playerName)
+NetClient::NetClient(const string& serverIP, const string& service, int family, const string& playerName, bool enableHeartbeat)
 	: NetManager(service, family)
 	, m_ServerIP(serverIP)
+	, m_SendHeartbeats(enableHeartbeat)
 {
 	SetDropPacketChance(0.1f);
 	SetSimulatedLatency(0.1f);
@@ -10,9 +11,9 @@ NetClient::NetClient(const string& serverIP, const string& service, int family, 
 	m_LocalPlayerPtr = make_shared<NetPlayer>(playerName);
 }
 
-bool NetClient::StaticInit(const string& serverIP, const string& service, int family, const string& playerName)
+bool NetClient::StaticInit(const string& serverIP, const string& service, int family, const string& playerName, bool enableHeartbeat)
 {
-	s_Instance.reset(new NetClient(serverIP, service, family, playerName));
+	s_Instance.reset(new NetClient(serverIP, service, family, playerName, enableHeartbeat));
 	return Instance()->Init();
 }
 
@@ -68,13 +69,10 @@ void NetClient::ProcessPacket(InputBitStream& is, const SockAddrIn& addr)
 		break;
 
 	case Msg_Net_Heartbeat:
-		if (m_LocalPlayerPtr->GetState() == Net_Connected)
+		uint32_t heartbeat;
+		if (HeartbeatMsg::Receive(*m_LocalPlayerPtr->GetConnection(), is, heartbeat))
 		{
-			uint32_t heartbeat;
-			if (HeartbeatMsg::Receive(*m_LocalPlayerPtr->GetConnection(), is, heartbeat))
-			{
-				DEBUG("Server heartbeat: [%4d]", heartbeat);
-			}
+			VERBO("Server heartbeat: [%4d]", heartbeat);
 		}
 		break;
 
@@ -104,6 +102,11 @@ void NetClient::SendOutgoingPackets()
 	{
 		m_LocalPlayerPtr->GetConnection()->ProcessTimedOutPackets();
 		m_LocalPlayerPtr->GetConnection()->ProcessTimedoutAcks();
+
+		if (m_SendHeartbeats)
+		{
+			m_LocalPlayerPtr->GetConnection()->SendHeartbeat();
+		}
 	}
 }
 

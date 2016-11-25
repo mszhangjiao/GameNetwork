@@ -38,8 +38,6 @@ public:
 
 	void ResetCapacity(uint32_t byteCapacity)
 	{
-		assert(m_BitCapacity >= byteCapacity << 3);
-
 		m_BitCapacity = byteCapacity << 3;
 		m_BitHead = 0;
 	}

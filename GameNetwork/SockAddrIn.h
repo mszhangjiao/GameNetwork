@@ -61,13 +61,13 @@ struct SockAddrIn : public sockaddr_storage
 	// Return the IPv4 network address;
 	ULONG GetIPAddr() const
 	{
-		return ((SOCKADDR_IN *)this)->sin_addr.s_addr;
+		return ntohl(((SOCKADDR_IN *)this)->sin_addr.s_addr);
 	}
 
 	// Return port number;
-	short GetPort() const
+	USHORT GetPort() const
 	{
-		return ((SOCKADDR_IN *)this)->sin_port;
+		return ntohs(((SOCKADDR_IN *)this)->sin_port);
 	}
 
 	// Get an IPv4 or IPv6 address from SockAddrIn structure;

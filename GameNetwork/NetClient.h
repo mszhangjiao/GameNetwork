@@ -14,7 +14,7 @@ public:
 		return dynamic_cast<NetClient *>(NetManager::Instance().get());
 	}
 
-	static bool StaticInit(const string& serverIP, const string& service, int family, const string& playerName);
+	static bool StaticInit(const string& serverIP, const string& service, int family, const string& playerName, bool enableHeartbeat = true);
 
 	virtual bool IsServer() override
 	{
@@ -36,7 +36,7 @@ public:
 	virtual void ShowDroppedPacket(InputBitStream& is, const SockAddrIn& addr) override;
 
 private:
-	NetClient(const string& serverIP, const string& service, int family, const string& playerName);
+	NetClient(const string& serverIP, const string& service, int family, const string& playerName, bool enableHeartbeat = true);
 	bool Init();
 
 	// Packet sending functions;
@@ -55,4 +55,5 @@ private:
 	NetPlayerPtr m_LocalPlayerPtr;
 
 	float m_TimeOfLastHello;
+	bool m_SendHeartbeats;
 };

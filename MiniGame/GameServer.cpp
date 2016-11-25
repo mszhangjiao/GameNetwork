@@ -7,6 +7,8 @@ bool GameServer::StaticInit()
 	{
 		s_Instance.reset(server);
 		NetServer::Instance()->EnableDeliveryStats(false);
+		StringUtil::SetConsoleLogLevel(LL_Debug);
+		StringUtil::SetDebugWindowLogLevel(LL_Debug);
 
 		INFO("Server is ready, waiting for players to join...");
 		return true;
@@ -24,7 +26,7 @@ GameServer::GameServer()
 bool GameServer::InitNetManager()
 {
 	// enable/disable the server heartbeats and showing delivery stats
-	return NetServer::StaticInit(m_Service, m_NetFamily, false, false);
+	return NetServer::StaticInit(m_Service, m_NetFamily, true, false);
 }
 
 void GameServer::DoFrame()
@@ -368,7 +370,6 @@ void GameServer::UpdateTurn(MatchPtr matchPtr)
 			auto it = playedCards.find(players[i]->GetId());
 			if (it == playedCards.end())
 			{
-				ERR("%s: player [%d] played card not received", __FUNCTION__, players[i]->GetId());
 				gotPlayedCardForAll = false;
 				break;
 			}

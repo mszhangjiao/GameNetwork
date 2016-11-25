@@ -6,6 +6,9 @@ bool GameClient::StaticInit(const string& serverIP, const string& playerName)
 	if (client->InitNetManager())
 	{
 		s_Instance.reset(client);
+		StringUtil::SetConsoleLogLevel(LL_Debug);
+		StringUtil::SetDebugWindowLogLevel(LL_Debug);
+
 		INFO("Client %s is ready, connecting to server %s ...", playerName.c_str(), serverIP.c_str());
 		return true;
 	}
@@ -46,7 +49,6 @@ void GameClient::FindMatch()
 
 	FindMatchMsg::Send(*playerPtr->GetConnection());
 	playerPtr->SetState(Net_FindingMatch);
-	INFO("%s", __FUNCTION__);
 }
 
 void GameClient::PlayTurn(TurnId turnId)

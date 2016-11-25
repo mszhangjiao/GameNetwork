@@ -164,7 +164,7 @@ public:
 		return seq;
 	}
 
-	bool ReadAndProcessReliability(InputBitStream& is);
+	bool ReadAndProcessReliability(InputBitStream& is, SequenceNumber& seq);
 	void ProcessTimedOutPackets();
 	void ProcessTimedoutAcks();
 	void SaveOutgoingPacket(SequenceNumber seq, const OutputBitStream& os)
@@ -182,7 +182,7 @@ public:
 private:
 	SequenceNumber WriteSequence(OutputBitStream& os, bool reliable);
 	void WriteAckData(OutputBitStream& os);
-	bool ProcessSequence(InputBitStream& is);
+	bool ProcessSequence(InputBitStream& is, SequenceNumber& seq);
 	void ProcessAcks(InputBitStream& is);
 	void AddPendingAck(SequenceNumber seq);
 

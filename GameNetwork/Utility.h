@@ -27,12 +27,18 @@ public:
 
 	static void Log(LogLevel level, const char* format, ...);
 
-	static void SetShowLogLevel(LogLevel level)
+	static void SetConsoleLogLevel(LogLevel level)
 	{
-		sShowLogLevel = level;
+		sConsoleLogLevel = level;
+	}
+
+	static void SetDebugWindowLogLevel(LogLevel level)
+	{
+		sDebugWindowLogLevel = level;
 	}
 private:
-	static LogLevel sShowLogLevel;
+	static LogLevel sConsoleLogLevel;
+	static LogLevel sDebugWindowLogLevel;
 };
 
 #define FATAL(...) StringUtil::Log(LL_Fatal, __VA_ARGS__);

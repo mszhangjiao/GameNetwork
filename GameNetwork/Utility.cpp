@@ -41,7 +41,8 @@ UDPSocketPtr SockUtil::CreateUDPSocket(int family)
 	}
 }
 
-LogLevel StringUtil::sShowLogLevel = LL_Info;
+LogLevel StringUtil::sConsoleLogLevel = LL_Info;
+LogLevel StringUtil::sDebugWindowLogLevel = LL_Debug;
 
 const char* StringUtil::GetLevelString(LogLevel level)
 {
@@ -80,9 +81,10 @@ void StringUtil::Log(LogLevel level, const char* format, ...)
 	msg += info;
 	msg += "\n";
 
-	OutputDebugStringA(msg.c_str());
+	if (level >= sDebugWindowLogLevel)
+		OutputDebugStringA(msg.c_str());
 
-	if (level >= sShowLogLevel)
+	if (level >= sConsoleLogLevel)
 		cout << msg;
 }
 

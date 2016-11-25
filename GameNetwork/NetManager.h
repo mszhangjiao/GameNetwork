@@ -18,7 +18,7 @@ struct ReceivedPacket
 class NetManager
 {
 public:
-	const int cMaxPacketsPerFrame = 1;
+	const int cMaxPacketsPerFrame = 10;
 	static const int cPacketBufferSize = 1500;
 	const float cDisconnectTimeoutValue = 30.f;
 

@@ -30,6 +30,11 @@ public:
 
 		SequenceNumber seq = conn.WriteReliability(os, Reliable);
 
+		if (Reliable)
+		{
+			DEBUG("Send: MsgType [%d], seq [%d], connection port [%5hu]", MessageType, seq, conn.GetRemoteAddr().GetPort());
+		}
+
 		os.Write(args...);
 
 		if (Reliable)
@@ -44,8 +49,15 @@ public:
 	{
 		static_assert(MessageType < 256, "Control channel message must be a byte.");
 
-		bool isValid = conn.ReadAndProcessReliability(is);
+		SequenceNumber seq;
+		bool isValid = conn.ReadAndProcessReliability(is, seq);
 
+		if (Reliable)
+		{
+			DEBUG("Receive: MsgType [%d], seq [%d], connection port [%5hu]", MessageType, seq, conn.GetRemoteAddr().GetPort());
+		}
+
+		// we may still need to consume it
 		if (isValid)
 		{
 			is.Read(args...);
@@ -107,10 +119,12 @@ enum MsgNetType
 // string: PlayerName
 typedef Message<Msg_Net_Hello, false, string> HelloMsg;
 
-typedef Message<Msg_Net_Welcome, false, PlayerId> WelcomeMsg;
+typedef Message<Msg_Net_Welcome, true, PlayerId> WelcomeMsg;
 
 // uint32_t: heartbeat value
-typedef Message<Msg_Net_Heartbeat, true, uint32_t> HeartbeatMsg;
+// make heartbeat false since we are sending more important message now,
+// and heartbeats don't need to be reliable;
+typedef Message<Msg_Net_Heartbeat, false, uint32_t> HeartbeatMsg;
 
 // no param;
 typedef Message<Msg_Net_Ack, false> AckMsg;
