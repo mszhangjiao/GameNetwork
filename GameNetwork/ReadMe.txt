@@ -1,6 +1,6 @@
-========================================================================
+================================================================================
     STATIC LIBRARY : GameNetwork Project Overview
-========================================================================
+================================================================================
 
 GameNetwork is a library implementing basic reliable UDP network that can be
 used for other projects, like multiplayer games. 
@@ -18,8 +18,27 @@ message of type with a line of code (simply a typedef), and the serialization
 of this new message type is ready for you. This uses the new feature from C++11,
 relieve us from the ugly macros or repeatitive classes;
 - It simulates packet loss and latency and do reliability statistics;
+- It implements a Client-Server architecture where the server communicates with
+all clients, and each client communicates only with the server;
+- It implements the whole process of the connection set up between a client and 
+a server, and implements the disconnection process based on the last packet 
+received time (socket errors are not well handled yet);
+- After the client is connected to the server, the server will send its heartbeat
+in a certain interval, and the client will send its heartbeat to server too. The 
+heartbeats are used to keep the connection alive;
+- The server supports multiple clients, any client can connection to it at anytime,
+and it sends independent heartbeats to each client, and calculate the stats separately.
 
-========================================================================
+Notes:
+- This library was written after learning the book "Multiplayer Game Programming"
+and referencing to the sample code "RoboCat", mainly in these parts:
+-- Network manager (NetServer and NetClient are very different because of using 
+Messaging systemm);
+-- BitStream (enhanced with variadic template functions);
+-- Utility (enhanced for the logging functions);
+-- The reliable UDP is implemented very differently, in GameNetwork, an in-order
+reliable layer is achieved, in order to support the game based on in-order messages;
+====================================================================================
 
 File descriptions:
 

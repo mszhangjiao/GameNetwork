@@ -4,20 +4,22 @@
 
 MiniGame
 
-- It implements a Client-Server architecture where the server communicates with
-all clients, and each client communicates only with the server;
-- It implements the whole process of the connection set up between a client and 
-a server, and implements the disconnection process based on the last packet 
-received time (socket errors are not well handled yet);
-- After the client is connected to the server, the server will send it heartbeat
-in a certain interval, and the client will display the received heartbeat;
-- This simple function is very useful to test the reliabile layer of the underlying
-library. It shows the client receives heart beats in order, it also shows the stats
-of server sending reliable packets. The resent rate changes when tweaking the 
-parameters: packet drop rate and lantency and resending time out values;
-- The server supports multiple clients, any client can connection to it at anytime,
-and it sends independent heartbeats to each client, and calculate the stats separately.
-
+- This project is based on the GameNetwork library;
+- Implement a basic matchmaking system: after connecting to the server using
+the functionalities in GameNetwork, the player can send a FindMatch message 
+to initiate the matchmaking process. The server will try to find a match for
+the player and fill the match with other players. When a match is full, the
+server starts the match. And it moves from turn to turn till the end of the
+match;
+- It simulates a simple card game: the server starts a game with certain 
+number of cards and players, it randomly shuffles the cards and sends the 
+cards to each player; in each turn, each player plays a card, and the server
+compares the card value and rewards scores accordingly. The scores are
+accumulated on the server side till the end of the match, and server sends
+the match results to the players;
+- Implement a console command system to handle the game commands. The input
+of the commands is in a seperate thread, and the execution of the commands 
+is in the main  thread;
 ========================================================================
 
 File descriptions:
